@@ -158,4 +158,6 @@ Bon appétit and happy coding! 🍳💻🥘
 
 ---
 
+**Source code:** [gitlab.com/felipedbene/los-platos-de-sara](https://gitlab.com/felipedbene/los-platos-de-sara)
+
 *Originally published on [Medium](https://medium.com/@felipedebene/from-instagram-to-web-cooking-up-an-automated-recipe-blog-pipeline-162d02ddb743).*
