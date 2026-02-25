@@ -1,0 +1,12 @@
+{{ if .Site.Params.googleAdsense }}
+<!-- Google AdSense - debene.dev -->
+<div class="post-ad" style="margin: 2rem 0; text-align: center; min-height: 90px;">
+  <ins class="adsbygoogle"
+       style="display:block"
+       data-ad-client="{{ .Site.Params.googleAdsense }}"
+       data-ad-slot="auto"
+       data-ad-format="auto"
+       data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+{{ end }}
