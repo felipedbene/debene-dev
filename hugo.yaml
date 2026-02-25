@@ -22,7 +22,7 @@ params:
   author: "Felipe De Bene"
   keywords: ["homelab", "POWER8", "AIX", "IBM", "Kubernetes", "infrastructure", "alternative computing", "Gentoo", "PowerPC", "enterprise UNIX"]
   images: ["/images/og-default.png"]
-  # googleAdsense: "ca-pub-XXXXXXXXXXXXXXXX"  # Uncomment when AdSense is approved
+  googleAdsense: "ca-pub-1479106809372421"
   defaultTheme: auto
   ShowReadingTime: true
   ShowShareButtons: true
