@@ -154,6 +154,9 @@ After AIX boots for the first time, you're greeted with a Korn shell prompt and 
 
 First, networking:
 
+![Welcome to AIX Version 7.2 — the moment SSH worked](images/aix-ssh-welcome.png)
+*The moment it all became real. SSH into AIX 7.2, greeted by that glorious ASCII banner. Getting here meant understanding that Enter = Ctrl+M on the serial console. Small victories.*
+
 ```bash
 mktcpip -h aix -i en0 -a 10.0.1.132 -m 255.255.255.0 -g 10.0.1.1
 echo 'nameserver 10.0.1.7' > /etc/resolv.conf
