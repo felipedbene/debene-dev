@@ -50,13 +50,6 @@ params:
     icon: ""
     iconHeight: 35
 
-  homeInfoParams:
-    Title: "Hey 👋"
-    Content: >
-      Infrastructure engineer, alternative computing enthusiast, homelab obsessive.
-      I run Gentoo on POWER8, AIX in KVM, and a Kubernetes cluster that's more complex than most production environments.
-      From a basement in Chicago.
-
   socialIcons:
     - name: github
       url: "https://github.com/felipedbene"
