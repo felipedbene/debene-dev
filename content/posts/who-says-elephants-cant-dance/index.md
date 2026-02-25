@@ -68,6 +68,9 @@ First up: raw computational throughput using architecture-specific SIMD instruct
 
 **Verdict:** The i9-12900K dominates. This is expected—six years of process improvements, clock speeds hitting 5.2 GHz versus POWER8's ~3.3 GHz, and better instructions-per-clock (IPC). When you're only using one core, modern x86 is brutal.
 
+![SIMD benchmark results](images/simd-results.png)
+*Single-threaded SIMD performance: Intel dominates across the board.*
+
 ## Round 2: Single-Threaded Memory Performance
 
 Next, I tested the memory subsystem with a single thread to see how fast each architecture can actually feed data to those fancy SIMD units.
@@ -89,6 +92,9 @@ Next, I tested the memory subsystem with a single thread to see how fast each ar
 **Verdict:** The i9-12900K's memory subsystem is substantially faster. Modern memory controllers, lower latency, DDR4/DDR5 support—it all adds up. POWER8's aging DDR3 memory and older controller design show their age here.
 
 At this point, the pattern is clear: for single-threaded workloads, the i9-12900K is obliterating the 2015 hardware. Exactly as expected.
+
+![Sequential read performance](images/sequential-read.png)
+*Single-threaded memory bandwidth: the i9's modern memory controller crushes it.*
 
 ## Round 3: The Multi-Threaded Uprising
 
@@ -117,6 +123,9 @@ At 32 threads—where the i9 is oversubscribed beyond its 24 native threads—th
 
 And here's the kicker: POWER8 is only using 32 of its 160 threads. That's 20% capacity. The elephant isn't even trying yet.
 
+![Sequential read scaling](images/sequential-scaling.png)
+*Multi-threaded sequential read scaling: POWER8 catches and passes the i9 at 8 threads.*
+
 ### Random Access Scaling - The Stunner
 
 | Threads | i9-12900K (M ops/sec) | POWER8 S822LC (M ops/sec) | Winner |
@@ -132,6 +141,9 @@ This is wild. The i9-12900K is 6.8x faster per thread. Yet when you throw enough
 
 The universe has a sense of humor.
 
+![Random access scaling](images/random-scaling.png)
+*Random access scaling: identical performance at 32 threads. The universe has a sense of humor.*
+
 ### Strided Access - i9 Fights Back
 
 Not every test favored POWER8's parallelism strategy. In strided access—which tests memory controller sophistication and prefetching—the i9-12900K reasserted dominance:
@@ -143,6 +155,9 @@ Not every test favored POWER8's parallelism strategy. In strided access—which 
 | 32 | **242.84 GB/s** | 73.11 GB/s | **i9 (3.3x)** |
 
 The i9-12900K's modern memory controller—with better prefetching, bank interleaving, and support for DDR4/DDR5—delivers over 240 GB/s of strided bandwidth. POWER8's aging memory technology can't keep up here. The 160 threads can't compensate when you're fundamentally bottlenecked by memory controller throughput.
+
+![Strided access results](images/strided-access.png)
+*Strided access: Intel's sophisticated memory controller reasserts dominance.*
 
 ## What We Learned
 
