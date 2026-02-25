@@ -6,6 +6,10 @@ author: "Felipe De Bene"
 description: "Opinions expressed here are my own, fueled by late-night coding sessions and an unreasonable amount of coffee. Building a reproducible DevOps infrastructure with Harvester HCI and SaltStack automation."
 tags: ["DevOps", "Harvester", "SaltStack", "Terraform", "Kubernetes", "infrastructure", "automation", "virtualization"]
 categories: ["DevOps", "Infrastructure"]
+cover:
+    image: "images/cover.webp"
+    alt: "DevOps infrastructure diagram"
+    relative: true
 ShowToc: true
 TocOpen: false
 ---

@@ -6,6 +6,10 @@ author: "Felipe De Bene"
 description: "For fifty bucks, I got myself a time machine. A journey into resurrecting a PowerMac G5 and discovering the forgotten world of Big Endian computing."
 tags: ["PowerPC", "G5", "retro-computing", "Linux", "OpenFirmware", "endianness", "Adelie"]
 categories: ["Hardware", "Retro Computing"]
+cover:
+    image: "images/cover.jpeg"
+    alt: "PowerMac G5 aluminum tower"
+    relative: true
 ShowToc: true
 TocOpen: false
 ---
@@ -38,6 +42,8 @@ Adelie's installer cheerfully declared, "Bootloader installed successfully!"
 
 Reality: "?" — literally, the flashing folder with a question mark.
 
+![Infamous blinking folder](images/blinking-folder.png)
+
 This was my first real encounter with **OpenFirmware**, Apple's pre-Intel BIOS-that's-not-a-BIOS. Think of it as the love child of Forth and a migraine. The documentation feels like it was written by a monk with a grudge against future sysadmins.
 
 After hours of trial and error, and more hallucinations from Mr. Chat than I care to admit, salvation came from a Gentoo forum post. With a bit of ritual incantation, I rebuilt the bootloader, and suddenly… success. Adelie booted cleanly, no LiveCD required.
@@ -57,6 +63,8 @@ I started small. The G5 connected to my LAN (yes, it does IPv6 like a champ), an
 - YouTube refused to acknowledge reality.
 
 I tried every browser Adelie offered and eventually landed on **ArcticFox**. It almost behaved like a modern browser, except for occasional endianness meltdowns — where half the binary thought left was right and up was down.
+
+![ArcticFox browser with broken rendering](images/arcticfox-broken.jpeg)
 
 That's when I fell into a rabbit hole I'd somehow avoided all these years: **Big Endian vs. Little Endian**.
 

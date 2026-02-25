@@ -6,6 +6,10 @@ author: "Felipe De Bene"
 description: "A Tale of Two Philosophies: When 160 Threads Meet Modern Silicon. Can a 2015 IBM POWER8 server compete with Intel's 2021 flagship? The answer might surprise you."
 tags: ["hardware", "benchmarking", "POWER8", "Intel", "performance", "architecture", "PowerPC", "SMT"]
 categories: ["Hardware", "Performance Testing"]
+cover:
+    image: "images/cover.jpeg"
+    alt: "IBM POWER8 server and cat6 cables on floor"
+    relative: true
 ShowToc: true
 TocOpen: false
 ---
@@ -15,6 +19,8 @@ TocOpen: false
 I have a problem. I see weird computer hardware on eBay, and I buy it. Last year's victim: an IBM POWER8 S822LC server from 2015. Cost: $300. Shipping: $50. The look on my partner's face when it arrived: priceless.
 
 Everyone told me it was a relic, a curiosity, basically e-waste with RGB lights (okay, it doesn't have RGB, but it should). But staring at those specs — 160 hardware threads via SMT-8 — I couldn't help but wonder: could raw, embarrassing parallelism compete with modern single-thread supremacy?
+
+![Yes, those are cat6 cables. Yes, this is on my floor. Yes, my "homelab" is held together by hope and zip ties. We're doing SCIENCE here.](images/server-floor.png)
 
 Lou Gerstner once asked if elephants could dance. Turns out, even the old ones still have moves. Time to benchmark.
 
@@ -47,11 +53,15 @@ On paper, this should be a massacre. The i9–12900K is newer, faster, and repre
 
 First up: raw computational throughput using architecture-specific SIMD instructions. I wrote equivalent benchmarks for both platforms — VSX (Vector Scalar eXtensions) on POWER8, SSE/FMA on x86. To keep things fair, I used 128-bit vectors on both architectures, even though the i9–12900K can flex with 256-bit AVX2 or even 512-bit AVX-512.
 
+![SIMD Benchmark Results](images/simd-results.png)
+
 **Verdict:** The i9–12900K dominates. This is expected — six years of process improvements, clock speeds hitting 5.2 GHz versus POWER8's ~3.3 GHz, and better instructions-per-clock (IPC). When you're only using one core, modern x86 is brutal.
 
 ## Round 2: Single-Threaded Memory Performance
 
 Next, I tested the memory subsystem with a single thread to see how fast each architecture can actually feed data to those fancy SIMD units.
+
+![Sequential Read Performance](images/sequential-read.png)
 
 **Random Access Performance:**
 - i9–12900K: 950 million accesses/sec
@@ -72,6 +82,8 @@ I scaled up the benchmarks to use 1, 2, 4, 8, 16, and 32 threads. Each thread op
 
 ### Sequential Read Scaling
 
+![Sequential Read Scaling Results](images/sequential-scaling.png)
+
 Wait. Hold up! 🤯
 
 - At 8 threads, POWER8 catches the i9–12900K.
@@ -79,6 +91,8 @@ Wait. Hold up! 🤯
 - At 32 threads — where the i9 is oversubscribed beyond its 24 native threads — the 2015 server beats the 2021 flagship.
 
 ### Random Access Scaling — The Stunner
+
+![Random Access Scaling Results](images/random-scaling.png)
 
 Both systems hit **2.1 BILLION random memory accesses per second** at 32 threads. Not "approximately the same." Not "within margin of error." Literally identical down to the last digit in my measurements.
 
@@ -88,7 +102,9 @@ The universe has a sense of humor. 🫠
 
 ### Strided Access — i9 Fights Back
 
-Not every test favored POWER8's parallelism strategy. In strided access — which tests memory controller sophistication and prefetching — the i9–12900K reasserted dominance.
+Not every test favored POWER8's parallelism strategy. In strided access — which tests memory controller sophistication and prefetching — the i9–12900K reasserted dominance:
+
+![Strided Access Results](images/strided-access.png)
 
 The i9–12900K's modern memory controller — with better prefetching, bank interleaving, and support for DDR4/DDR5 — delivers over 240 GB/s of strided bandwidth. POWER8's aging memory technology can't keep up here. The 160 threads can't compensate when you're fundamentally bottlenecked by memory controller throughput.
 

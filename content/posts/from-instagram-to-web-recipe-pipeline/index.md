@@ -6,6 +6,10 @@ author: "Felipe De Bene"
 description: "The Recipe for Modern Content Creation (Now with Extra Bytes!). Building an automated pipeline that transforms Instagram posts into a fully-featured recipe blog using Hugo, AI, and cloud services."
 tags: ["automation", "Hugo", "OpenAI", "Notion", "DevOps", "static-site", "recipe-blog", "Python"]
 categories: ["Web Development", "Automation"]
+cover:
+    image: "images/cover.png"
+    alt: "Automated recipe blog pipeline diagram"
+    relative: true
 ShowToc: true
 TocOpen: false
 ---
@@ -122,8 +126,13 @@ def notion_to_gitlab():
 
 Our Notion-powered frontend is dressed to impress:
 
+![Notion Database to control publishing (notice Published toggle)](images/notion-database.png)
+
 - Responsive design (looks good on everything from smartphones to smart fridges)
 - Custom donut charts for nutritional info (because pie charts were too on-the-nose)
+
+![Rendered Shortcode](images/donut-chart.jpeg)
+
 - High-quality images (food porn, but make it classy)
 - Social media integration (spread the flavor!)
 - SEO optimization using Schema.org (Google's gotta eat too)
@@ -131,6 +140,8 @@ Our Notion-powered frontend is dressed to impress:
 ## Why This Matters (or: How I Learned to Stop Worrying and Love the Bot)
 
 This automation pipeline is the kitchen gadget you never knew you needed:
+
+![User Interface to edit each post before publishing](images/user-interface.png)
 
 1. **No more copy-pasta** from Instagram (unless it's an actual pasta recipe)
 2. **Consistent formatting** (because messy recipes are for your kitchen, not your blog)

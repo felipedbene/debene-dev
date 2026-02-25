@@ -6,6 +6,10 @@ author: "Felipe De Bene"
 description: "The Dream: A teenage obsession with the iBook G4 finally fulfilled two decades later. A journey through SSD upgrades, broken power buttons, distro hopping, and building a Kubernetes-powered compile farm."
 tags: ["iBook-G4", "PowerPC", "Gentoo", "retro-computing", "AltiVec", "Kubernetes", "distcc", "Linux"]
 categories: ["Hardware", "Retro Computing", "Linux"]
+cover:
+    image: "images/cover.png"
+    alt: "iBook G4 white clamshell laptop"
+    relative: true
 ShowToc: true
 TocOpen: false
 ---
@@ -13,6 +17,8 @@ TocOpen: false
 ## The Dream
 
 Back in the early 2000s, teenage me was obsessed with the iBook G4. That sleek white clamshell with its PowerPC CPU and AltiVec engine felt like the future. I couldn't afford one then — but now, two decades later, I finally scored one: a 1.33GHz model for $67 on eBay, original box and all.
+
+![iBook G4 2004](images/ibook-g4.png)
 
 Reality hit hard.
 
@@ -118,6 +124,8 @@ Yes, really. I built a distributed compile cluster using:
 - **distcc**
 - A motley Kubernetes cluster (because overkill is underrated)
 
+![A very diverse K8S Cluster ready to adopt another node](images/k8s-cluster.png)
+
 🏁 Result:
 What took 72 hours now takes **4 hours**. Small packages build in minutes.
 
@@ -130,6 +138,12 @@ Against all odds — and more than a few kernel panics — my iBook G4 now thriv
 - Part of a distributed build cluster
 
 It's not just a nostalgic machine anymore. It's a fully functional, if mildly ridiculous, cloud-native contributor!
+
+![Each Line is a Node (Either a Pi5/Intel/Rockchip)](images/cluster-nodes.png)
+
+Some more benchmarks:
+
+![Benchmark Results](images/benchmarks.png)
 
 Sometimes all it takes to make ancient hardware shine is a little help from its silicon friends.
 
