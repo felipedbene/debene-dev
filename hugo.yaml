@@ -1,0 +1,94 @@
+baseURL: "https://debene.dev/"
+languageCode: "en-us"
+title: "debene.dev"
+theme: "PaperMod"
+
+params:
+  env: production
+  title: "debene.dev"
+  description: "Infrastructure, alternative computing, and enterprise UNIX from a basement in Chicago."
+  author: "Felipe De Bene"
+  defaultTheme: auto
+  ShowReadingTime: true
+  ShowShareButtons: true
+  ShowPostNavLinks: true
+  ShowBreadCrumbs: true
+  ShowCodeCopyButtons: true
+  ShowWordCount: false
+  ShowRssButtonInSectionTermList: true
+  UseHugoToc: true
+  disableSpecial1stPost: false
+  disableScrollToTop: false
+  hidemeta: false
+  hideSummary: false
+  showtoc: true
+  tocopen: false
+
+  assets:
+    favicon: "/favicon.ico"
+
+  label:
+    text: "debene.dev"
+    icon: ""
+    iconHeight: 35
+
+  homeInfoParams:
+    Title: "Hey 👋"
+    Content: >
+      Infrastructure engineer, alternative computing enthusiast, homelab obsessive.
+      I run Gentoo on POWER8, AIX in KVM, and a Kubernetes cluster that's more complex than most production environments.
+      From a basement in Chicago.
+
+  socialIcons:
+    - name: github
+      url: "https://github.com/felipedebene"
+    - name: linkedin
+      url: "https://linkedin.com/in/felipedebene"
+
+  cover:
+    hidden: false
+    hiddenInList: false
+    hiddenInSingle: false
+
+  editPost:
+    disabled: true
+
+  fuseOpts:
+    isCaseSensitive: false
+    shouldSort: true
+    location: 0
+    distance: 1000
+    threshold: 0.4
+    minMatchCharLength: 0
+    keys: ["title", "permalink", "summary", "content"]
+
+menu:
+  main:
+    - identifier: posts
+      name: Posts
+      url: /posts/
+      weight: 10
+    - identifier: tags
+      name: Tags
+      url: /tags/
+      weight: 20
+    - identifier: search
+      name: Search
+      url: /search/
+      weight: 30
+
+outputs:
+  home:
+    - HTML
+    - RSS
+    - JSON
+
+markup:
+  highlight:
+    codeFences: true
+    guessSyntax: true
+    lineNos: false
+    style: monokai
+  goldmark:
+    renderer:
+      unsafe: true
