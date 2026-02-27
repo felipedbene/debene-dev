@@ -1,12 +1,12 @@
 ---
-title: "Modernizing DayTrader on AIX: REST APIs, CI/CD, and 34 Commits of Chaos"
-subtitle: "Part 2: Teaching a 2005 Java EE App New Tricks on IBM's Forbidden UNIX"
+title: "34 Commits of Chaos: DayTrader, AIX, and Knowing When to Pivot"
+subtitle: "Part 2: How I Tried to Modernize Enterprise Java on AIX and Ended Up on Gentoo Instead"
 date: 2026-02-26T10:00:00-06:00
 draft: false
-tags: ["aix", "power8", "ibm", "java-ee", "websphere", "ci-cd", "github-actions", "postgresql", "homelab", "devops"]
+tags: ["aix", "power8", "ibm", "java-ee", "websphere", "spring-boot", "ci-cd", "github-actions", "postgresql", "homelab", "gentoo", "devops"]
 categories: ["Infrastructure", "Alternative Computing"]
 author: "Felipe De Bene"
-description: "34 commits in one day: adding REST APIs, PostgreSQL, CI/CD via GitHub Actions, OIDC auth, and a modern fintech UI to a Java EE benchmark running on AIX 7.2 — deployed from a basement in Chicago."
+description: "34 commits in one day: REST APIs, PostgreSQL, CI/CD, OIDC disasters, Docker nightmares — and the moment I gave up on AIX and deployed on Gentoo instead. Sometimes the best engineering decision is knowing when to pivot."
 cover:
   image: "images/daytrader-home-felipe.png"
   alt: "DayTrader home page with market summary and account details"
@@ -156,26 +156,73 @@ Commit `93dcd2d`: unified OIDC working. *Finally*.
 
 The lesson, written in the blood of a dozen commits: **WebSphere Liberty's web.xml and OIDC configuration is fragile in ways that will ruin your day.** It doesn't validate aggressively. It doesn't warn loudly. It just... doesn't work. And you're left reading raw XML character by character, looking for a phantom closing tag, wondering if this is really how you want to spend your Tuesday.
 
-## Act 5: The Docker Trials
+## Act 5: The Pivot — Sometimes the Best Code Is the Code You Don't Write
 
-Parallel to the OIDC disaster, I was trying to build Docker images. The goal was dual-target deployment: native on AIX (the primary target) and containerized on x86 (for people who don't have POWER8 hardware in their basements, which is most people).
+Parallel to the OIDC disaster, I was also trying to containerize DayTrader for Docker deployment. The ppc64le Docker ecosystem is... sparse. I tried four different base images in rapid succession:
 
-The ppc64le Docker ecosystem is... sparse. I tried everything:
+- `a0c51cb`: Official `websphere-liberty` for ppc64le. Features missing. Dead end.
+- `8128c44`: Temurin 17 + Open Liberty. Feature resolution broken.
+- `e3c3c0a`: JavaEE8 with `featureUtility`. Feature repo unreachable. Timeout.
+- `1219473`: Full Liberty package. 1.8GB image. ENTRYPOINT permission denied as user 1001.
 
-- `a0c51cb`: Official `websphere-liberty` image for ppc64le. Pulled fine. Liberty features were missing. Dead end.
-- `8128c44`: Temurin 17 + Open Liberty manually installed. Java worked, Liberty's feature resolution didn't.
-- `e3c3c0a`: JavaEE8 tag with `featureUtility` to install features at build time. The feature repository was unreachable from the build. Timeout.
-- `1219473`: Full Liberty package, everything pre-installed. 1.8GB image. But it worked.
+More reverts. More commits. More frustration.
 
-Then the ENTRYPOINT permission issue (`dc77526`) — user `1001` can't create directories in paths that need root. The fix was a `chmod` in the Dockerfile, but finding *which* directory needed it required running the container interactively and watching it fail in real-time.
+And then I stepped back. Looked at what I was doing. I had a REST API that worked. PostgreSQL that worked. CI/CD that worked. OIDC that *finally* worked after 12 commits of XML archaeology. And I was now fighting Docker — a container runtime — to package an application that was already running perfectly fine as a plain archive deployed to Liberty.
 
-In the end, the Docker image works on x86_64 for demo purposes. But the *real* deployment — the one that matters, the one that makes this whole project interesting — is native on AIX. No containers. Just an EAR file dropped into Liberty's `dropins/` directory on a real (virtualized) AIX system.
+Why was I doing this? Because Docker is "modern"? Because a blog post about enterprise Java modernization needs containers to be taken seriously?
 
-Because the point was never to make this easy. The point was to make it *work*.
+*No.*
 
-## Act 6: Making It Beautiful
+I closed the Docker tab. I deleted the Dockerfile experiments. And I did the simplest possible thing: deployed the EAR file directly to Liberty. Just `scp` the archive, drop it in `dropins/`, restart. Like it's 2010. Like containers were never invented.
 
-By late afternoon, I had a modernized DayTrader with REST APIs, PostgreSQL, CI/CD, and OIDC authentication. It worked. It was architecturally impressive. And it still looked like a website from 2005.
+And you know what? **It worked perfectly.** No Docker daemon. No image registry. No ENTRYPOINT permission issues. No 1.8GB images. Just a 40MB EAR file and a `server start` command.
+
+But I didn't stop there. Because while I was fighting with AIX and Docker, I realized something else: the POWER8 hardware underneath was being *wasted*. AIX was running in a KVM VM with 4 cores and 8GB of RAM. Meanwhile, the host — Gentoo ppc64le — had access to all 20 cores and 128GB of RAM.
+
+## Act 6: "Screw It, We're Going Bare Metal"
+
+Here's the thing about `sample.daytrader7` that I hadn't explored yet: it includes a `daytrader-spring` module. A full Spring Boot version of DayTrader. Same benchmark, same trading logic, but running on Spring Boot instead of Java EE.
+
+Spring Boot on Gentoo ppc64le. OpenJDK 21. Native POWER8 hardware. No VM overhead. No AIX compatibility headaches. No IBM JVM restrictions.
+
+I compiled it. I ran it. It came up in seconds.
+
+```bash
+java -jar target/daytrader-spring-1.0.0-SNAPSHOT.jar \
+    --spring.profiles.active=prod
+```
+
+That's it. That's the deployment. No Liberty server. No EAR packaging. No `server.xml` with 47 XML elements. A single JAR file and a command line flag.
+
+I pointed it at the same PostgreSQL database on Kubernetes. Same MetalLB IP, same JDBC connection, different application. The Spring Boot app came up on port 9082 while the Liberty/AIX instance kept running on port 9080. Two DayTraders, same database, same POWER8 hardware — one in a VM running a proprietary UNIX, one on bare metal Gentoo.
+
+And then I wrote a load test.
+
+## Act 7: 157 Trades Per Second — The POWER8 Doesn't Even Notice
+
+The load test was simple and brutal: log in as each of the 15,000 users, buy random stocks, sell random holdings, check portfolios. A bash script hammering the Spring Boot REST API as fast as `curl` could go.
+
+![htop showing 1,070 threads on POWER8 — PostgreSQL and Spring Boot DayTrader under load](images/htop-daytrader-spring-p8.png)
+*1,070 threads on the POWER8. PostgreSQL doing SELECTs, COMMITs, DELETEs, and UPDATEs in the top half. Spring Boot DayTrader workers churning through trades in the bottom half. CPU at 5.5%. Load average: 7.94. The machine doesn't even notice.*
+
+The results:
+
+- **15,000 users** processed
+- **~75,000 trades** executed (buys + sells)
+- **475 seconds** total runtime
+- **~157 trades per second** sustained throughput
+- **CPU usage: 5.5%** — barely a rounding error on 20 POWER8 cores
+
+![DayTrader Market Summary with stock quotes](images/daytrader-market-quotes.png)
+*Market Summary after the load test. TSIA at 77.24, volume over 600 million. 10,000 stock symbols actively traded.*
+
+This is a machine from 2015 that cost $300 on eBay. Running an enterprise Java benchmark at 157 trades per second while barely breaking a sweat. The POWER8's massive thread count and memory bandwidth were *designed* for exactly this kind of workload — lots of concurrent transactions, lots of database operations, lots of JVM threads.
+
+The AIX VM was impressive as a proof of concept. But bare metal Gentoo on the same hardware? That's where the real performance lives.
+
+## Act 8: Making It Beautiful
+
+By late afternoon, I had two DayTrader instances running — one on AIX (Liberty, Java EE), one on bare metal Gentoo (Spring Boot, OpenJDK 21). Both connected to PostgreSQL on K8s. Both accessible via the network. And both still looked like websites from 2005.
 
 The original UI uses JSP framesets. *Framesets.* The HTML `<frameset>` element, deprecated since HTML5, was the backbone of DayTrader's interface. There were GIF images for up/down arrows. The color scheme was "enterprise beige." The layout assumed an 800x600 monitor.
 
@@ -197,39 +244,34 @@ The commit message for `e346853` includes `Co-authored-by: Claude` because I'm n
 
 The result is genuinely beautiful. A dark-themed fintech UI serving real trading data from PostgreSQL, running on WebSphere Liberty, on AIX 7.2, on a POWER8 VM, in a basement in Chicago. You can visit it right now.
 
-## The Architecture: A Monument to Stubbornness
+## The Architecture: Two Paths, Same Hardware
 
-Let me draw you a picture of what happens when you open your browser and visit DayTrader:
+The final setup has two parallel stacks running on the same POWER8 machine:
 
+**The AIX Path (proof of concept):**
 ```
-Browser (anywhere in the world)
-  → Cloudflare Tunnel (aix-daytrader, tunnel ID e06cd9b5)
-    → Caddy reverse proxy (aix.k8s.debene.name, TLS termination)
-      → WebSphere Liberty 24.0.0.12 (AIX 7.2 TL4, port 9080)
-        → JPA / EclipseLink
-          → JDBC (postgresql-42.7.1.jar)
-            → PostgreSQL 16 (K8s CNPG, MetalLB 10.0.100.104:5432)
+Browser → Cloudflare Tunnel (aix-daytrader)
+  → Caddy (aix.k8s.debene.name, TLS)
+    → WebSphere Liberty 24.0.0.12 (AIX 7.2 KVM VM, port 9080)
+      → PostgreSQL (K8s CNPG, MetalLB 10.0.100.104:5432)
 ```
 
-Seven layers. Four decades of technology. The request starts at Cloudflare's edge network, tunnels into my house through a persistent `cloudflared` connection, hits Caddy for TLS termination, crosses into the AIX VM, passes through Liberty's servlet engine, traverses the JPA layer into raw JDBC, and finally lands in a PostgreSQL database running on Kubernetes.
-
-The deployment pipeline is equally unhinged:
-
+**The Gentoo Path (where the real work happens):**
 ```
-git push → GitHub Actions (self-hosted runner, homelab)
-  → Maven build
-    → MinIO (artifact upload)
-      → SSH to AIX (10.0.1.132)
-        → Deploy EAR + JDBC driver
-          → Restart Liberty
-            → Health check (30 retries × 10 seconds)
-              → DB population (10,000 quotes, 15,000 users)
-                → Discord webhook notification
+Spring Boot DayTrader (bare metal POWER8, port 9082)
+  → OpenJDK 21 ppc64le
+    → PostgreSQL (K8s CNPG, MetalLB 10.0.100.104:5432)
 ```
 
-This is publicly accessible. Through a Cloudflare tunnel. From AIX. Running in my basement.
+**The CI/CD:**
+```
+git push → GitHub Actions (self-hosted runner)
+  → Maven build → MinIO (artifact store)
+    → SSH to AIX → deploy EAR → restart Liberty
+    → Discord webhook notification
+```
 
-I keep saying it because I keep not believing it.
+Both paths end at the same PostgreSQL database on Kubernetes. The difference? The AIX path took 34 commits, a dozen reverts, and an existential crisis. The Gentoo path took one `java -jar` command.
 
 ## The Numbers
 
@@ -244,57 +286,29 @@ Let's take stock of what happened on February 25th, 2026:
 - **2 AI models** credited as co-authors in commit history
 - **1 GitGuardian alert** (deserved)
 - **~12 reverts** across the OIDC and Docker sagas
-- **1 man** who should have gone to bed earlier
+- **1 man** who learned when to stop fighting and start shipping
 
 ## What Does This Actually Mean?
 
-I've been thinking about this a lot. Not the technical details — those are fun but they're just plumbing. I mean the *implication*.
+I started this day trying to prove that AIX could do everything a modern platform can. REST APIs? Done. PostgreSQL? Done. CI/CD? Done. OIDC? Eventually done, after losing years off my life to XML parsing.
 
-There's a narrative in tech that goes like this: legacy systems are dead weight. Mainframes are dinosaurs. AIX is a museum piece. If it isn't Kubernetes-native, serverless, written in Rust, and deployed via GitOps, it's irrelevant. The future is cloud. The past is trash.
+But Docker broke me. Not because AIX can't run containers — it can't, but that's not the point. It broke me because I was so focused on proving that AIX could be "modern" that I forgot the most important engineering principle: **use the right tool for the right job.**
 
-But here's what I proved in one chaotic Tuesday: a 2005 Java EE application running on a 1986-lineage operating system can have REST APIs, a modern UI, CI/CD via GitHub Actions, OIDC authentication, and a cloud-native PostgreSQL backend. It can be deployed automatically on every git push. It can be publicly accessible through Cloudflare. It can look like a modern fintech app.
+AIX is incredible at what it was built for. WebSphere Liberty on AIX is a legitimate enterprise runtime. But when you're fighting the platform instead of building on it, that's a signal. Not a signal that the platform is bad — a signal that you're using it wrong.
 
-**The platform didn't hold it back.** AIX ran everything I threw at it. Liberty didn't care that it was running on a virtualized POWER8 core. PostgreSQL didn't care that the JDBC connection came from a VM running an OS most developers have never heard of. Cloudflare didn't care that the origin server was in my basement.
+The moment I pivoted to Gentoo bare metal with a simple Spring Boot JAR, everything clicked. No more XML surgery. No more Docker permission issues. No more retry loops waiting for a JVM to warm up in a VM. Just `java -jar` and go. 157 trades per second on a $300 eBay server that wasn't even trying.
 
-The real barriers were knowledge and willingness. Knowing that `web.xml` comment tags can silently eat your security configuration. Being willing to push 34 commits in a day, including a dozen reverts. Having the stubbornness to SSH into an AIX box at 11 PM to debug why the health check is failing on attempt 27 of 30.
+**The real lesson of these 34 commits isn't "AIX is dead" or "Gentoo is better."** It's that knowing when to pivot is as important as knowing how to persist. Part 1 was about stubbornness — refusing to give up until AIX booted and DayTrader ran. Part 2 is about wisdom — recognizing that the same hardware can do *more* when you stop fighting its constraints.
 
-Enterprise systems aren't dying because the technology is bad. They're dying because the people who understand them are retiring, and the people replacing them have never been shown that these platforms can play in the modern world.
+AIX still runs on that POWER8. Liberty still serves DayTrader on port 9080. The Cloudflare tunnel still works. But the real workhorse? That's Gentoo on bare metal, speaking Spring Boot and OpenJDK 21, processing 75,000 trades without breaking a sweat.
 
-Maybe this blog post changes one person's mind. Maybe some junior developer reads this and thinks, "Huh, maybe that old AIX box at work isn't as hopeless as I thought." Maybe a grizzled AIX sysadmin sees this and thinks, "Someone gets it."
+Sometimes the most modern thing you can do is deploy a JAR file and call it a day.
 
-Or maybe I'm just a guy with a POWER8 server in his basement who had a really productive Tuesday.
-
-Either way, the code is public:
+The code is public:
 
 - **Original fork:** [github.com/felipedbene/sample.daytrader7](https://github.com/felipedbene/sample.daytrader7)
 - **Modernized version:** [github.com/felipedbene/daytrader-modern](https://github.com/felipedbene/daytrader-modern)
 
-And the app is live. Right now. Running on AIX 7.2, in a KVM VM, on a POWER8 in my basement, accessible to the entire internet through a Cloudflare tunnel.
+And the app is live. Right now. Liberty on AIX *and* Spring Boot on Gentoo, both running on the same POWER8 in my basement.
 
 Come visit. The market's always open.
-
-## Bonus: The Load Test — 157 Trades Per Second
-
-But wait — I didn't stop at AIX.
-
-Remember, the P8 also runs Gentoo natively. And `sample.daytrader7` includes a Spring Boot version of DayTrader in the `daytrader-spring` module. So I did what any reasonable person would do: I compiled it on the POWER8 with OpenJDK 21 ppc64le and fired it up alongside the AIX Liberty instance.
-
-![htop showing 1,070 threads on POWER8 — PostgreSQL and Spring Boot DayTrader under load](images/htop-daytrader-spring-p8.png)
-*1,070 threads on the POWER8. PostgreSQL doing SELECTs, COMMITs, DELETEs, and UPDATEs. Spring Boot DayTrader workers humming away. CPU at 5.5%. Load average: 7.94. This machine doesn't even notice.*
-
-I wrote a load test script that logs in as each of the 15,000 users, buys random stocks, sells random holdings, and checks portfolios. The results:
-
-- **15,000 users** processed
-- **~75,000 trades** executed (buys + sells)
-- **475 seconds** total runtime
-- **~157 trades per second** sustained throughput
-- **CPU usage: barely noticeable** on 20 POWER8 cores
-
-![DayTrader Market Summary with stock quotes](images/daytrader-market-quotes.png)
-*Market Summary after the load test. TSIA at 77.24, volume over 600 million. 10,000 stock symbols being actively traded.*
-
-This is a machine from 2015 that cost $300 on eBay. Running an enterprise Java benchmark at 157 trades per second while barely breaking a sweat. The POWER8's massive thread count and memory bandwidth were *designed* for exactly this kind of workload — lots of concurrent transactions, lots of database operations, lots of JVM threads.
-
-Modern Intel hardware would beat it on single-thread performance. But throw 15,000 concurrent users at it? The POWER8 just grins and asks for more.
-
-The script is at `/tmp/daytrader-load.sh` on the P8 if anyone wants to reproduce this. The market never closes in my basement.
