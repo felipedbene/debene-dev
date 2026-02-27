@@ -220,29 +220,25 @@ This is a machine from 2015 that cost $300 on eBay. Running an enterprise Java b
 
 The AIX VM was impressive as a proof of concept. But bare metal Gentoo on the same hardware? That's where the real performance lives.
 
-## Act 8: Making It Beautiful
+## Act 8: The Dark Trading Floor — 21 Files, Zero npm
 
-By late afternoon, I had two DayTrader instances running — one on AIX (Liberty, Java EE), one on bare metal Gentoo (Spring Boot, OpenJDK 21). Both connected to PostgreSQL on K8s. Both accessible via the network. And both still looked like websites from 2005.
+But I wasn't done. The UI modernization in Act 6 was a good start, but it was still lipstick on a pig. The JSP framesets were gone, the colors were modern, but it still *felt* like a 2005 app wearing a Halloween costume.
 
-The original UI uses JSP framesets. *Framesets.* The HTML `<frameset>` element, deprecated since HTML5, was the backbone of DayTrader's interface. There were GIF images for up/down arrows. The color scheme was "enterprise beige." The layout assumed an 800x600 monitor.
+What if DayTrader looked like an actual trading platform? Not a Bloomberg terminal cosplay — but something you'd believe was built this decade?
 
-Commit `e346853` changed everything: 1,013 lines of CSS added, 498 lines removed. A complete UI transformation.
+21 files changed. 8 new, 13 modified. All in one session. Here's what happened:
 
-I turned DayTrader into a modern fintech dashboard:
+**The Dark Trading Theme.** A complete CSS rewrite. Deep navy-black palette with bright trading colors — green for gains, red for losses, blue for actions. The Inter font because we have *standards*. Every single one of the 12 templates was updated for dark theme compatibility. A proper card component system. A mobile hamburger menu that actually works. Active navigation highlighting.
 
-- **Dark mode** with CSS custom properties and subtle glow effects
-- **Hero banners** on the dashboard and portfolio pages — gradient backgrounds with bold typography
-- **3-column market summary grid** replacing the old single-column table
-- **Gain/loss row tinting** — green for gains, red for losses, because this is a trading app and visual feedback matters
-- **Animated "live data" pulse badge** — a little green dot that pulses to suggest real-time data, even though it absolutely is not real-time
-- **CSS arrow indicators** replacing those GIF arrows from 2005
-- **Responsive design** — it actually works on mobile now
+**Charts and Data Visualization.** I vendored TradingView's `lightweight-charts` library — the same charting engine used by actual crypto exchanges. Created a new `quote_price_history` database table (Flyway V3 migration) that stores price data points on every trade execution. An hourly auto-cleanup job purges records older than 24 hours. A REST endpoint at `/api/charts/quote/{symbol}` serves the chart data. The result: when you look up a stock quote, you get an actual area chart showing price history. On a 2005 benchmark app. Running on POWER8.
 
-The constraint that made this interesting: **all vanilla CSS.** No npm. No webpack. No Tailwind. No build step. No `node_modules/` directory with 47,000 dependencies. Because this application deploys on AIX 7.2, and I am not installing Node.js on AIX 7.2. I have *some* self-preservation instinct.
+**Dashboard Redesign.** The home page — `tradehome.html` — is now a card-based grid: Cash Balance, Holdings Value, Gain/Loss, Account Info. A Quick Trade search bar sits at the top. A Recent Orders table shows your last 5 trades. The `HomeController` was updated to fetch recent order data. It looks like Robinhood. It runs on hardware older than some of Robinhood's engineers.
 
-The commit message for `e346853` includes `Co-authored-by: Claude` because I'm not going to pretend I wrote 1,013 lines of CSS by myself at 9 PM after 30+ commits of debugging XML corruption and Docker permission issues. Claude Sonnet 4.6 helped design the color system, the responsive grid, and the animation keyframes. I provided the vision and the JSP surgery. We made a good team.
+**Real-time Feedback.** WebSocket updates flash stock prices green or red using `data-symbol` attributes — when a trade executes, the relevant price ticks on screen. A toast notification system wired up for HTMX triggers. Loading spinners in the market summary. Form buttons that show loading state on submit. The kind of micro-interactions that make an app feel *alive*.
 
-The result is genuinely beautiful. A dark-themed fintech UI serving real trading data from PostgreSQL, running on WebSphere Liberty, on AIX 7.2, on a POWER8 VM, in a basement in Chicago. You can visit it right now.
+And the constraint that makes all of this insane: **still no npm. Still no webpack. Still no node_modules.** TradingView charts via a vendored JS file. HTMX via a single script tag. CSS via one hand-crafted stylesheet. Because this deploys to a POWER8 running Gentoo, via a GitHub Actions pipeline that SSHs into the machine and drops a JAR file. There is no build step. There is no `package.json`. There is only the archive and the machine.
+
+The CI/CD pipeline deploys it automatically on every push. Populate the database, run the trading scenario, and watch the charts animate and prices flash in real-time. On a $300 server from 2015. Running a benchmark from 2005. Looking like it was built yesterday.
 
 ## The Architecture: Two Paths, Same Hardware
 
