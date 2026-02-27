@@ -240,34 +240,29 @@ And the constraint that makes all of this insane: **still no npm. Still no webpa
 
 The CI/CD pipeline deploys it automatically on every push. Populate the database, run the trading scenario, and watch the charts animate and prices flash in real-time. On a $300 server from 2015. Running a benchmark from 2005. Looking like it was built yesterday.
 
-## The Architecture: Two Paths, Same Hardware
+## The Architecture: Where We Ended Up
 
-The final setup has two parallel stacks running on the same POWER8 machine:
+After all that chaos, here's the final stack — no AIX, no Docker, no VMs:
 
-**The AIX Path (proof of concept):**
 ```
-Browser → Cloudflare Tunnel (aix-daytrader)
-  → Caddy (aix.k8s.debene.name, TLS)
-    → WebSphere Liberty 24.0.0.12 (AIX 7.2 KVM VM, port 9080)
-      → PostgreSQL (K8s CNPG, MetalLB 10.0.100.104:5432)
-```
-
-**The Gentoo Path (where the real work happens):**
-```
-Spring Boot DayTrader (bare metal POWER8, port 9082)
-  → OpenJDK 21 ppc64le
-    → PostgreSQL (K8s CNPG, MetalLB 10.0.100.104:5432)
+Browser (anywhere in the world)
+  → Cloudflare Tunnel (aix-daytrader)
+    → Caddy reverse proxy (aix.k8s.debene.name, TLS)
+      → WebSphere Liberty 24.0.0.12 (Gentoo Linux, kernel 6.17, port 9080)
+        → JPA / EclipseLink
+          → JDBC (postgresql-42.7.1.jar)
+            → PostgreSQL 16 (also on the Gentoo box)
 ```
 
-**The CI/CD:**
+Everything on one machine. Bare metal POWER8. Gentoo ppc64le. No virtualization layer. No container runtime. No orchestrator. Just Linux, Liberty, and PostgreSQL, running on 20 cores of IBM iron.
+
+The CI/CD still works:
 ```
 git push → GitHub Actions (self-hosted runner)
   → Maven build → MinIO (artifact store)
-    → SSH to AIX → deploy EAR → restart Liberty
+    → SSH to P8 → deploy archive → restart Liberty
     → Discord webhook notification
 ```
-
-Both paths end at the same PostgreSQL database on Kubernetes. The difference? The AIX path took 34 commits, a dozen reverts, and an existential crisis. The Gentoo path took one `java -jar` command.
 
 ## The Numbers
 
