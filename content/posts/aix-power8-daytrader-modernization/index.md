@@ -8,9 +8,9 @@ categories: ["Infrastructure", "Alternative Computing"]
 author: "Felipe De Bene"
 description: "34 commits in one day: REST APIs, PostgreSQL, CI/CD, OIDC disasters, Docker nightmares — and the moment I gave up on AIX and deployed on Gentoo instead. Sometimes the best engineering decision is knowing when to pivot."
 cover:
-  image: "images/daytrader-home-felipe.png"
-  alt: "DayTrader home page with market summary and account details"
-  caption: "DayTrader on WebSphere Liberty, connected to PostgreSQL on K8s. Account balance: -$28M. Trading is hard."
+  image: "images/daytrader-dark-dashboard.png"
+  alt: "DayTrader dark trading dashboard with market summary and portfolio cards"
+  caption: "From 2005 JSP framesets to a dark fintech dashboard. Spring Boot 3.x, Thymeleaf, HTMX, PostgreSQL. Running on bare metal POWER8."
   relative: true
 ShowToc: true
 TocOpen: true
@@ -241,6 +241,15 @@ What if DayTrader looked like an actual trading platform? Not a Bloomberg termin
 And the constraint that makes all of this insane: **still no npm. Still no webpack. Still no node_modules.** TradingView charts via a vendored JS file. HTMX via a single script tag. CSS via one hand-crafted stylesheet. Because this deploys to a POWER8 running Gentoo, via a GitHub Actions pipeline that SSHs into the machine and drops a JAR file. There is no build step. There is no `package.json`. There is only the archive and the machine.
 
 The CI/CD pipeline deploys it automatically on every push. Populate the database, run the trading scenario, and watch the charts animate and prices flash in real-time. On a $300 server from 2015. Running a benchmark from 2005. Looking like it was built yesterday.
+
+![DayTrader landing page — Spring Boot 3.x, Thymeleaf, HTMX, PostgreSQL, compatible with Linux ppc64le](images/daytrader-dark-landing.png)
+*The landing page. "Built with Spring Boot 3.x, Thymeleaf, HTMX, and PostgreSQL. Compatible with Linux ppc64le (Power8)." Try finding another trading app that lists ppc64le compatibility as a feature.*
+
+![DayTrader dark login page](images/daytrader-dark-login.png)
+*Clean dark login. "DayTrader Spring Boot - Stock Trading Benchmark" at the bottom. No frameworks were harmed in the making of this CSS.*
+
+![DayTrader dark dashboard — market summary, portfolio cards, gain/loss](images/daytrader-dark-dashboard.png)
+*The dashboard. Market Summary with TSIA at 57.36 (-89%). Card-based layout: Cash Balance (-$26M, oops), Holdings Value ($1.3M), Gain/Loss (-2,788%). This is what happens when 15,000 AI-controlled traders hit the market simultaneously. The UI handles it beautifully. The portfolio... less so.*
 
 ## The Architecture: Where We Ended Up
 
