@@ -16,8 +16,6 @@ ShowToc: true
 TocOpen: true
 ---
 
----
-
 ## Why Would Anyone Run AIX in 2026?
 
 It's February 2026. I'm staring at an IBM S822 (8335-GCA) in my basement rack — a dual POWER8 server with 128GB of RAM and 20 cores that can do 160 threads with SMT8. This machine used to live in a datacenter running enterprise workloads. Now it runs Gentoo Linux.
