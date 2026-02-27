@@ -34,7 +34,9 @@ It started innocently enough. I was looking at the DayTrader web UI — all JSP 
 
 DayTrader 7, IBM's official `sample.daytrader7`, is a Java EE 7 benchmark application. It's got the full enterprise stack: EJBs for business logic, JPA for persistence, JMS for asynchronous order processing, message-driven beans for trade execution. It's a genuinely impressive piece of software architecture, designed to stress-test application servers. It also hasn't been meaningfully updated since the Obama administration.
 
-I forked `sample.daytrader7` into a new repo — [daytrader-modern](https://github.com/felipedbene/daytrader-modern) — and started adding a REST API.
+I forked IBM's `sample.daytrader7` — first into a separate repo called `daytrader-modern` where I tried to bolt modern features onto the Java EE version. REST APIs, PostgreSQL, OIDC, Docker. That's where the 34 commits of chaos happened. That's where the OIDC saga unfolded. That's where Docker broke my spirit.
+
+Eventually I archived `daytrader-modern` and went back to the original fork — [sample.daytrader7](https://github.com/felipedbene/sample.daytrader7) — which already had a Spring Boot module sitting right there, waiting to be discovered. Sometimes the answer is in the repo you started with.
 
 The approach was surgical. I wrote 6 JAX-RS resource classes exposing 9 endpoints:
 
@@ -297,8 +299,8 @@ Sometimes the most modern thing you can do is deploy a JAR file and call it a da
 
 The code is public:
 
-- **Original fork:** [github.com/felipedbene/sample.daytrader7](https://github.com/felipedbene/sample.daytrader7)
-- **Modernized version:** [github.com/felipedbene/daytrader-modern](https://github.com/felipedbene/daytrader-modern)
+- **The abandoned attempt (archived):** [github.com/felipedbene/daytrader-modern](https://github.com/felipedbene/daytrader-modern) — 34 commits of learning what *not* to do
+- **The real deal:** [github.com/felipedbene/sample.daytrader7](https://github.com/felipedbene/sample.daytrader7) — Spring Boot rewrite, dark trading UI, CI/CD, the works
 
 And the app is live. Right now. Liberty on AIX *and* Spring Boot on Gentoo, both running on the same POWER8 in my basement.
 
