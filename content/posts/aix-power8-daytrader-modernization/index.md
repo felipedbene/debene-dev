@@ -313,4 +313,6 @@ The code is public:
 
 And the app is live. Right now. Liberty on AIX *and* Spring Boot on Gentoo, both running on the same POWER8 in my basement.
 
+**[Try it yourself → daytrader.debene.dev](https://daytrader.debene.dev)**
+
 Come visit. The market's always open.
