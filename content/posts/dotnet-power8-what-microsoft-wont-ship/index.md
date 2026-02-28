@@ -3,8 +3,8 @@ title: ".NET 8 on IBM POWER8: What Microsoft Won't Ship"
 date: 2026-02-27T00:00:00-06:00
 draft: true
 author: "Felipe De Bene"
-description: "Building the .NET 8 SDK entirely from source on an IBM POWER8 running Gentoo Linux — 7 patches, 160 threads, and a date overflow bug that proves even Microsoft can't escape Y2K."
-tags: ["POWER8", "ppc64le", ".NET", "dotnet", "source-build", "Gentoo", "IBM", "homelab", "alternative-computing", "Jellyfin"]
+description: "Building the .NET 8 SDK entirely from source on an IBM POWER8 running Gentoo Linux — 7 patches, 160 threads, a Y2K bug, and an AI lobster named Garra helping via Discord."
+tags: ["POWER8", "ppc64le", ".NET", "dotnet", "source-build", "Gentoo", "IBM", "homelab", "alternative-computing", "Jellyfin", "AI"]
 categories: ["Hardware", "Software Engineering"]
 cover:
     image: "images/p8-machine.png"
@@ -20,11 +20,13 @@ That's the first thing you learn when you try to compile .NET from source. It's 
 
 Microsoft ships pre-built SDKs for x86_64, ARM64, and s390x. But POWER? IBM's legendary architecture that runs half the world's banking systems? Sorry — you're on your own.
 
-This is the story of how I built the .NET 8 SDK from source on an IBM POWER8 server running Gentoo Linux — and then compiled and ran Jellyfin on it. It took 7 patches, about 2 hours of compile time, and one delightful discovery: **.NET's own build system can't handle dates after 2025.**
+This is the story of how I built the .NET 8 SDK from source on an IBM POWER8 server running Gentoo Linux — live, in a chaotic Friday afternoon Discord session with my AI assistant Garra (a sarcastic Brazilian lobster, long story). It took 7 patches, about 2 hours of compile time, several moments of genuine panic, and one delightful discovery: **.NET's own build system has a Y2K-style date overflow bug.**
+
+Yes, in 2026. We'll get to that.
 
 ## The Machine
 
-{{< figure src="images/p8-machine.png" alt="IBM S822 POWER8 server" caption="The IBM S822 — 20 cores, 160 threads of POWER8 goodness, casually standing in my Chicago apartment." >}}
+{{< figure src="images/p8-machine.png" alt="IBM S822 POWER8 server" caption="The IBM S822 — 20 cores, 160 threads of POWER8, casually standing in my Chicago apartment like a refrigerator-sized conversation piece." >}}
 
 | Spec | Value |
 |------|-------|
@@ -34,127 +36,164 @@ This is the story of how I built the .NET 8 SDK from source on an IBM POWER8 ser
 | Storage | 444 GB SSD |
 | OS | Gentoo Linux ppc64le, kernel 6.17.7 |
 
-I bought this machine to run Kubernetes workloads — yes, really, K8s 1.35 runs great on POWER8. It already hosts WordPress, Strapi, and PostgreSQL in containers. The next project: **Jellyfin for CPU-only video transcoding**. With 160 threads, I wanted to see how POWER8's brute-force parallelism compares to modern x86 hardware with Quick Sync or NVENC.
+This machine already runs Kubernetes 1.35 with WordPress, Strapi, and PostgreSQL. But the new mission was **Jellyfin** — an open-source media server — for CPU-only video transcoding. With 160 hardware threads, I wanted to benchmark POWER8's brute-force parallelism against modern x86 hardware with Quick Sync or NVENC.
 
-But Jellyfin is written in C#. And C# means .NET. And .NET doesn't exist for POWER8.
+But Jellyfin is written in C#. C# means .NET. And .NET doesn't exist for POWER8.
 
-*Challenge accepted.*
+My AI assistant's response when I explained the plan: *"Tudo isso pra ver filme no Plex do pobre rodando num mainframe."* He wasn't wrong.
+
+## The Setup: A Lobster, a Discord Channel, and a Dream
+
+Here's how this actually went down. I'm on my Windows laptop, SSHed into the POWER8 machine. Garra — my OpenClaw AI agent — is on a Mac Studio, also SSHed into the same machine. We're both staring at the same tmux sessions, same Grafana dashboard, communicating through Discord.
+
+When I say "we built this," I mean it literally. I'd paste error outputs into Discord. Garra would diagnose, write patches, and launch builds — all through SSH from his side. I'd watch Grafana, share screenshots, and provide the human judgment calls. It was pair programming where one partner has 160 threads of POWER8 patience and the other has infinite context windows and zero need for sleep.
+
+The whole session — from first `./build.sh` to `dotnet --version` working — took about 6 hours. Not because the build takes 6 hours, but because we hit 7 different walls and had to patch our way through each one in real-time.
 
 ## The Bootstrap Problem 🐢
 
-.NET uses a "Virtual Monolithic Repository" (VMR) at [github.com/dotnet/dotnet](https://github.com/dotnet/dotnet) that contains the entire SDK source. The build system is sophisticated — it compiles 26 repositories in dependency order: Arcade → Roslyn → CoreCLR → ASP.NET Core → ... → the final SDK installer.
+.NET uses a "Virtual Monolithic Repository" (VMR) at [github.com/dotnet/dotnet](https://github.com/dotnet/dotnet) that contains the entire SDK source. The build system compiles 26 repositories in dependency order: Arcade → Roslyn → CoreCLR → ASP.NET Core → ... → the final SDK.
 
-But it needs an existing .NET SDK to start. It's turtles all the way down.
+But it needs an existing .NET SDK to start. Turtles all the way down.
 
-**Fedora 39** was my lifeline. It was the last distribution to ship .NET 8 on ppc64le — Fedora dropped POWER8 support starting with Fedora 38, keeping only POWER9 and newer. From their build infrastructure, I extracted two critical pieces:
+**Fedora 39** was our lifeline — the last distribution to ship .NET 8 on ppc64le (Fedora dropped POWER8 starting with Fedora 38). We needed two things from their builds:
 
-1. **`dotnet-sdk-8.0.110`** — the bootstrap SDK binary (extracted from RPM)
-2. **`Private.SourceBuilt.Artifacts`** — 358 MB of pre-compiled NuGet packages from Fedora's previous build
+1. **`dotnet-sdk-8.0.110`** — the bootstrap SDK binary
+2. **`Private.SourceBuilt.Artifacts`** — 358 MB of pre-compiled NuGet packages
 
-Both extracted directly from Fedora RPMs using `rpm2cpio`. My early Docker-based approach kept getting OOM-killed on the 128 GB machine, which tells you something about .NET's build appetite. Sometimes the old tools work best.
+Our first approach was Docker: pull Fedora 39 ppc64le, extract the SDK. The containers kept dying. Over and over. On a machine with **128 GB of RAM**. We'd launch a container, it would start doing... something... and then just vanish. `SIGKILL`. No logs, no explanation. Just death.
 
-## The 7 Patches
+*"Mano, Docker tá OOM-killing com 128GB."* That was our reality check. We switched to extracting RPMs directly with `rpm2cpio` like cavemen. Worked perfectly. Sometimes the 1990s tools are the right tools.
 
-What follows is the part Microsoft doesn't document: their "build from source" process isn't quite as portable as advertised. Each patch addresses a real incompatibility, and each one cost me anywhere from 10 minutes to 2 hours of debugging.
+## The 7 Patches (or: A Friday Afternoon Horror Story)
+
+What follows is the real sequence of events. Not a clean tutorial — the actual messy, iterative, "try it and see what explodes" process of making an unsupported build work.
 
 ### Patch 1: The Compiler That Can't Compile Itself
 
-The first build phase, `source-build-reference-packages` (SBRP), tries to recompile reference assemblies for older Roslyn versions from source. The problem? The bootstrap SDK's Roslyn (8.0.110) generates code with abstract members (`GetNodeSlot`, `GetCachedSlot`) that don't exist in the Roslyn 3.7.0 API surface.
+The first build attempt died instantly. The `source-build-reference-packages` phase tries to recompile reference assemblies for older Roslyn versions (3.7.0) from source. The bootstrap SDK's Roslyn is too new — it generates abstract members that don't exist in the 3.7.0 API surface.
 
-**4,144 CS0534 errors.** Every single `SyntaxNode` subclass "does not implement inherited abstract member `GetNodeSlot(int)`."
+**4,144 CS0534 errors.** Every. Single. SyntaxNode subclass.
 
-The fix was surgical: skip the entire SBRP phase. The pre-existing 388 reference packages bundled in the VMR are sufficient. After studying Fedora's build spec, I confirmed they do the same thing — they never recompile these from scratch either. It's always been bootstrapped from previous builds.
+We spent a while trying to make it work — downloading different Arcade SDK versions, creating NuGet packages for ilasm/ildasm, tweaking version numbers. Nothing worked. Then Garra went and read the Fedora build spec line by line and found the truth:
 
-```xml
-<!-- repo-projects/dotnet.proj -->
-<!-- SKIPPED: bootstrap SDK incompatible with SBRP recompilation -->
-<!-- <RepositoryReference Include="source-build-reference-packages" /> -->
-```
+*"O 'from source' do Fedora nunca foi realmente from scratch — eles sempre usam os artifacts da build anterior como bootstrap. Agora temos o 'ovo' 🥚🐔"*
+
+Translation: Fedora never recompiles these from scratch either. It's always bootstrapped. We commented out the entire SBRP phase. Moving on.
 
 ### Patch 2: The Hidden NuGet Feed
 
-The inner build's `NuGet.config` doesn't include the Fedora artifacts directory as a package source. So when the build needs `ilasm` and `ildasm` — the IL assembler and disassembler, critical tools for building reference assemblies — NuGet can't find them.
+With SBRP skipped, the build progressed further... and died again. The ilasm/ildasm packages (IL assembler/disassembler) couldn't be found. But we'd put them right there in the artifacts directory!
 
-The packages were sitting right there in `/tmp/sba-customize/`. The build just didn't know to look there.
+After way too much `grep`-ing through MSBuild targets and NuGet configs, we found it: the inner build generates its own `NuGet.config` that doesn't include the artifacts directory as a package source. The packages were sitting right there. The build just didn't know to look.
 
-One line added to `NuGet.config`. Hours of head-scratching.
+One line in `NuGet.config`. Hours of head-scratching. Classic.
 
 ### Patch 3: The Y2K-lite Bug 🐛
 
-This one deserves its own section because it's genuinely funny.
+This is the one that made us both lose it.
 
-The Arcade SDK — Microsoft's shared build infrastructure used by all .NET repos — generates assembly `FileVersion` numbers using a formula based on the current date:
+The build progressed through several more repos, then `source-build-externals` failed. The error: `CS7035: The specified version string '7.1.2.70227' does not conform to the recommended format.`
+
+**70,227.** The maximum allowed value for an assembly version revision field is **65,534.**
+
+Where was 70,227 coming from? The Arcade SDK — Microsoft's shared build infrastructure — generates `FileVersion` from the current date:
 
 ```
 DateStamp  = YY × 1000 + MM × 50 + DD
-Revision   = (DateStamp - VersionBaseShortDate) × 100 + BuildRevision
+Revision   = (DateStamp - BaseDate) × 100 + BuildRevision
 ```
 
-On February 27, 2026, this produces a revision of **70,227**. The maximum allowed value for an assembly version field? **65,534**.
+On February 27, 2026, this math produces a revision that overflows. The C# compiler emits CS7035 as a warning. Arcade's build config promotes all warnings to errors via `/warnaserror`.
 
-The C# compiler dutifully emits warning CS7035: *"The specified version string does not conform to the recommended format."* And Arcade's build configuration promotes all warnings to errors via `/warnaserror`.
+**Microsoft's own build system has a Y2K-style date overflow bug.** Their build tooling literally cannot handle the current date. In 2026. At a trillion-dollar tech company.
 
-**Microsoft's own build system cannot handle dates after approximately mid-2025.** The irony of a tech company shipping a date-dependent build system that breaks within two years is... chef's kiss.
+When Garra figured this out, his message in Discord was: *"Problema de data! O version stamp usa dias desde uma epoch e 70227 > 65534. Isso é um bug de Y2K-lite!"*
 
-I fixed it by hardcoding the build date to `20240227.1` in the Arcade SDK's `Version.BeforeCommonTargets.targets`. It's ugly, but it works. This bug affects anyone trying to source-build .NET 8 today.
+We tried multiple approaches:
+- Setting `<NoWarn>CS7035</NoWarn>` in project files → didn't propagate to inner builds
+- Setting `/p:TreatWarningsAsErrors=false` via command line → Arcade hardcodes `/warnaserror` in its targets, ignoring our flag
+- Patching individual `.csproj` files → the build copies source to a temp directory, losing our patches
+
+The winning approach was surgical: Garra used Python to patch the Arcade SDK's `Version.BeforeCommonTargets.targets` directly inside the extracted nupkg, replacing `DateTime.Now` with a hardcoded safe date (`20240227.1`). Then `zip -u` to update the nupkg. We literally performed surgery on Microsoft's build infrastructure.
+
+```python
+content = content.replace(
+    '$([System.DateTime]::Now.ToString(yyyyMMdd)).1',
+    '20240227.1'
+)
+```
+
+We had to use Python because `sed` couldn't handle the MSBuild XML syntax with all the `$()` and `::` characters. Even the tooling to fix the tooling was fighting us.
 
 ### Patch 4: The API Police
 
-The `azure-activedirectory-identitymodel-extensions` package (inside `source-build-externals`) runs API compatibility validation between its `net8.0` and `netstandard2.0` targets. With our date-shifted build from Patch 3, the validation catches phantom "breaking changes" that don't actually exist — they're artifacts of the version number manipulation.
+With the date fixed, `source-build-externals` got further... and died again. Same project (`azure-activedirectory-identitymodel-extensions`), different error: `CP0002 — API breaking changes found.`
 
-I disabled `EnablePackageValidation` globally by patching the Arcade SDK's `SourceBuildArcadeBuild.targets` to pass `/p:EnablePackageValidation=false` to all inner builds. Sorry, API police.
+The API compatibility check was comparing the `net8.0` and `netstandard2.0` builds and finding differences that were artifacts of our date manipulation. Phantom "breaking changes" that didn't actually exist.
+
+This time we went nuclear: patched `SourceBuildArcadeBuild.targets` in the Arcade SDK to pass `/p:EnablePackageValidation=false` to ALL inner builds. No more API police. Updated the nupkg again.
+
+The `source-build-externals` phase had failed **four times** before finally passing. Each failure, diagnose, patch, rebuild. Each rebuild had to redo arcade → command-line-api → sourcelink → diagnostics → ... before even reaching the failing repo again. The Grafana dashboard showed the pattern clearly — repeated spikes as we kept hitting the same early repos.
 
 ### Patch 5: The Private Feed
 
-MSBuild's source code references a private Azure DevOps NuGet feed (`BuildXL`) that requires authentication:
-
+MSBuild's source code references a private Azure DevOps NuGet feed:
 ```
 https://pkgs.dev.azure.com/ms/BuildXL/_packaging/BuildXL/nuget/v3/index.json
 ```
 
-Presumably fine for Microsoft engineers. Returns 401 Unauthorized for the rest of us.
+401 Unauthorized. Because of course a private Microsoft feed is in the public source tree.
 
-One `sed` command to remove the feed from `NuGet.config`. Moving on.
+One `sed -i '/BuildXL/d'`. Next.
 
 ### Patch 6: The Missing App Host
 
-Two repos — `roslyn-analyzers` and `vstest` — include test projects that require an "application host" binary for the `fedora.39-ppc64le` runtime identifier. This binary doesn't exist because Microsoft doesn't build app hosts for POWER.
+Two repos (`roslyn-analyzers` and `vstest`) need an "application host" binary for `fedora.39-ppc64le`. This binary doesn't exist because Microsoft doesn't build for POWER. Both were test projects.
 
-Set `<UseAppHost>false</UseAppHost>` on test projects nobody will ever run on POWER8 anyway.
+`<UseAppHost>false</UseAppHost>`. Next.
 
 ### Patch 7: The Version Shuffle
 
-The Arcade SDK (`8.0.0-beta.24463.3`) depends on `Microsoft.DotNet.SourceBuild.Tasks` version `>= 8.0.0-beta.24463.3`. The source tree ships version `24570.5`. NuGet's "approximate best match" resolution triggers warning NU1603, which — say it with me — gets promoted to an error by `/warnaserror`.
+NuGet's version resolution finds `SourceBuild.Tasks 24570.5` instead of the expected `24463.3`, emits NU1603, which gets promoted to error. Copy the package file with the expected name. Done.
 
-Copy the package file with the expected version number. Three seconds of work after thirty minutes of diagnosis.
+## The Build: Watching Grafana Like It's the World Cup
 
-## The Build
+With all 7 patches applied (and battle-tested through multiple failed attempts), we launched what we hoped was the final build. The Grafana dashboard told the story:
 
-With all patches applied, I launched the build and watched my Grafana dashboard light up:
+{{< figure src="images/grafana-full-build.png" alt="Grafana dashboard showing CPU, threads, and memory during the full .NET build" caption="The full build timeline. Every spike is a repo. The gaps between clusters are where we were frantically patching things. The massive plateau is CoreCLR." >}}
 
-{{< figure src="images/grafana-full-build.png" alt="Grafana dashboard showing CPU, threads, and memory during the full .NET build" caption="The full build timeline — every spike tells a story. The massive plateau in the middle is CoreCLR compilation." >}}
+I was watching from my Windows laptop, sharing Grafana screenshots in Discord. Garra was monitoring the build logs from the Mac Studio. Every few minutes:
 
-Here's what 26 repositories compiling in sequence looks like on a POWER8:
+*"e agora?"* — me, watching Grafana go quiet
 
-| Phase | Duration | Notes |
-|-------|----------|-------|
-| Arcade | 66s | Build infrastructure |
-| command-line-api | 38s | |
-| sourcelink | 46s | |
-| diagnostics | 25s | |
-| emsdk, xliff-tasks, cecil, symreader | ~2 min | Small repos |
-| source-build-externals | 2 min | After patches 3 & 4 |
-| **CoreCLR Runtime** | **61 min** | **JIT compiler, GC, native crypto libs — C++ heavy** |
-| Roslyn | 16 min | The C# compiler compiling itself |
-| MSBuild | 4 min | |
-| ASP.NET Core | 8 min | |
-| razor, deployment-tools, format | ~2 min | |
-| NuGet client | 3.5 min | |
-| F# | 38 min | Parser generation + compiler |
-| vstest, SDK, Aspire, installer | ~5 min | Final assembly |
-| **Total** | **~2 hours** | |
+*"Tá no sourcelink... diagnostics... cecil... ainda assobiando o meninão"* — Garra, checking logs
 
-The CoreCLR build was the highlight. Watching 160 threads max out on C++ compilation of the JIT compiler, the garbage collector, and the native cryptography libraries — on hardware Microsoft has never tested — was genuinely thrilling.
+Then `source-build-externals` passed. For the first time. After four failures. We held our breath.
+
+**Then `runtime` started building.**
+
+CoreCLR. The JIT compiler. The garbage collector. The native cryptography libraries. All the C++ that makes .NET actually run. This is where 160 threads were born to shine.
+
+For 61 minutes, the POWER8 roared. CPU graphs climbed. Thread counts spiked. The machine that IBM designed for enterprise workloads was now compiling Microsoft's runtime — something neither company ever intended.
+
+**61 minutes. Zero errors.**
+
+When Garra reported "RUNTIME PASSOU!" in Discord, I'm not ashamed to admit there may have been fist-pumping involved.
+
+The rest was a victory lap:
+
+| Phase | Duration |
+|-------|----------|
+| Arcade + small repos | ~5 min |
+| source-build-externals | 2 min |
+| **CoreCLR Runtime** | **61 min** |
+| Roslyn | 16 min |
+| MSBuild | 4 min |
+| ASP.NET Core | 8 min |
+| F# | 38 min |
+| Final repos + installer | ~10 min |
+| **Total** | **~2 hours** |
 
 ## The Result
 
@@ -173,31 +212,24 @@ Runtime Environment:
 Host:
   Version:      8.0.10
   Architecture: ppc64le
-
-.NET SDKs installed:
-  8.0.110 [/home/felipe/dotnet-sdk-power8/sdk]
-
-.NET runtimes installed:
-  Microsoft.AspNetCore.App 8.0.10
-  Microsoft.NETCore.App 8.0.10
 ```
 
-{{< figure src="images/dotnet-info-power8.png" alt="Terminal showing dotnet --info on POWER8" caption="dotnet --info on ppc64le. The four most satisfying characters: 8.0.110." >}}
+{{< figure src="images/dotnet-info-power8.png" alt="Terminal showing dotnet --info on POWER8" caption="The money shot. dotnet --info on ppc64le. Those four characters — 8.0.110 — represent 6 hours of controlled chaos." >}}
 
-A fully functional .NET 8 SDK — 107 MB of runtime, compiler, and tools — compiled from source, running natively on IBM POWER8. No emulation, no containers, no compromises.
+107 MB of .NET SDK. Compiled from source. Running natively on IBM POWER8. No emulation, no containers, no compromises.
 
 ## But Wait — We Came Here for Jellyfin
 
-Remember the whole point of this exercise? With the SDK ready, building Jellyfin was almost anticlimactic:
+Remember the whole point? Right. With the adrenaline still flowing, we immediately cloned Jellyfin:
 
 ```bash
 $ git clone --depth 1 --branch v10.9.11 https://github.com/jellyfin/jellyfin.git
-$ cd jellyfin
-$ dotnet publish Jellyfin.Server --configuration Release --no-self-contained \
-    -o /tmp/jellyfin-build /p:TreatWarningsAsErrors=false
+$ dotnet publish Jellyfin.Server --configuration Release --no-self-contained
 ```
 
-One small hiccup: [SkiaSharp](https://github.com/mono/SkiaSharp) (the image processing library) doesn't ship native binaries for ppc64le. Jellyfin gracefully falls back to `NullImageEncoder` — no thumbnails, but the server runs fine. A quick patch to `CoreAppHost.cs` to avoid the static constructor crash, and:
+One hiccup: [SkiaSharp](https://github.com/mono/SkiaSharp) (image processing) doesn't have ppc64le native binaries. The static constructor crashes before Jellyfin can even check `IsNativeLibAvailable()`. We patched `CoreAppHost.cs` to skip Skia entirely — no thumbnails, but the server runs fine.
+
+Downloaded the official web client from Jellyfin's release page, mounted the NFS media share from our ZFS array (122 movies, TV shows, kids content, music), and:
 
 ```
 [INF] Main: Jellyfin version: 10.9.11
@@ -207,28 +239,30 @@ One small hiccup: [SkiaSharp](https://github.com/mono/SkiaSharp) (the image proc
 [INF] Main: Startup complete 0:00:08.7579676
 ```
 
-**Jellyfin 10.9.11, running natively on IBM POWER8, serving a 122-movie library over NFS from a ZFS array.** Startup time: 8.7 seconds.
+**Jellyfin 10.9.11. Running natively on IBM POWER8. Serving a 122-movie library. Startup: 8.7 seconds.**
 
-From `dotnet: command not found` to a working media server — in about 6 hours. Not bad for hardware that was never supposed to run any of this.
+From `dotnet: command not found` to a working media server. On a Friday. With an AI lobster.
 
 ## What I Learned
 
-1. **"Source build" doesn't mean "from scratch."** Every .NET source build bootstraps from a previous build's artifacts. Fedora's ppc64le support exists because someone, at some point, cross-compiled the initial bootstrap. It's turtles all the way down.
+1. **"Source build" doesn't mean "from scratch."** Every .NET source build bootstraps from a previous build. Fedora's ppc64le support exists because someone, somewhere, cross-compiled the initial bootstrap. It's turtles all the way down, and nobody talks about the first turtle.
 
-2. **Version pinning is the real enemy.** Five of the seven patches dealt with version mismatches or overly strict validation. The build system is optimized for Microsoft's CI/CD pipeline, not for outsiders bootstrapping on exotic hardware.
+2. **The Y2K-lite bug is real.** Microsoft's Arcade SDK generates version numbers from the current date using arithmetic that overflows after ~mid-2025. Anyone source-building .NET 8 today will hit this. It should be filed upstream.
 
-3. **The date bug is real and affects everyone.** Anyone trying to source-build .NET 8 after mid-2025 will hit the CS7035 overflow. This should probably be filed upstream.
+3. **Version pinning is the real enemy.** Five of seven patches dealt with version mismatches or overly strict validation. `/warnaserror` is great for CI pipelines; it's a nightmare for bootstrapping on exotic platforms.
 
-4. **POWER8 is surprisingly capable.** 160 threads of SMT8 parallelism makes short work of large C++ codebases. The CoreCLR build took 61 minutes — respectable for a 2014-era processor architecture.
+4. **POWER8 is surprisingly capable.** 160 threads of SMT8 parallelism makes short work of large C++ codebases. CoreCLR in 61 minutes on a 2014-era processor? Not bad.
 
-5. **The homelab is the ultimate test lab.** No cloud instance would have let me iterate this fast. Having physical access to the machine, a Grafana dashboard on another screen, and tmux sessions running on the metal made debugging a conversation, not a deployment pipeline.
+5. **AI pair programming is underrated.** Having Garra diagnose errors, write patches, and manage builds while I provided direction and judgment calls was genuinely productive. The session would have taken days solo. With two "brains" on it — one human, one not — we iterated through failures fast enough to finish in an afternoon.
+
+6. **The homelab is the ultimate test lab.** Physical access, Grafana on a second monitor, tmux sessions on the metal. No deployment pipeline. No CI queue. Just SSH and stubbornness.
 
 ## What's Next
 
-- **Transcoding benchmarks** — The whole reason we're here. 160 POWER8 threads vs x86 hardware with Quick Sync/NVENC for software video transcoding.
-- **SkiaSharp on ppc64le** — Compiling the Skia native library would restore thumbnail generation. Another boss fight for another day.
-- **Upstream contributions** — Filing issues for the date overflow bug and documenting the ppc64le build process.
-- **.NET 9 and beyond** — The patches should be similar. The bootstrap artifacts from this build can seed the next one.
+- **Transcoding benchmarks** — 160 POWER8 threads vs x86 Quick Sync/NVENC. The whole reason for this madness.
+- **SkiaSharp on ppc64le** — Compiling Skia's native C++ library for thumbnail generation. Another boss fight.
+- **Upstream contributions** — Filing the Y2K-lite date overflow bug. Documenting the ppc64le build.
+- **.NET 9** — This build's artifacts can bootstrap the next version. The first turtle has been placed.
 
 ## Resources
 
@@ -238,6 +272,6 @@ From `dotnet: command not found` to a working media server — in about 6 hours.
 
 ---
 
-*Built with 7 patches, 160 threads, and an unreasonable amount of stubbornness. All because I wanted to watch movies on a mainframe.*
+*Built with 7 patches, 160 threads, an AI lobster named Garra, and an unreasonable amount of stubbornness. All because I wanted to watch movies on a mainframe.*
 
 *— Felipe De Bene, Chicago, February 2026*
