@@ -1,0 +1,27 @@
+name: Deploy Blog
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: [self-hosted, homelab]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Build Hugo & Docker image
+        run: |
+          docker build -t blog-debene-dev:latest -t blog-debene-dev:${{ github.sha }} .
+
+      - name: Import into containerd
+        run: |
+          docker save blog-debene-dev:latest | sudo ctr -n k8s.io images import -
+
+      - name: Rollout restart
+        run: |
+          kubectl -n blog rollout restart deployment/blog
+          kubectl -n blog rollout status deployment/blog --timeout=120s
