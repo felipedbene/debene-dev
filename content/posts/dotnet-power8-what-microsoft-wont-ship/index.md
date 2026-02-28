@@ -1,7 +1,7 @@
 ---
 title: ".NET 8 on IBM POWER8: What Microsoft Won't Ship"
 date: 2026-02-27T00:00:00-06:00
-draft: true
+draft: false
 author: "Felipe De Bene"
 description: "Building the .NET 8 SDK entirely from source on an IBM POWER8 running Gentoo Linux — 7 patches, 160 threads, a Y2K bug, and an AI lobster named Garra helping via Discord."
 tags: ["POWER8", "ppc64le", ".NET", "dotnet", "source-build", "Gentoo", "IBM", "homelab", "alternative-computing", "Jellyfin", "AI"]
