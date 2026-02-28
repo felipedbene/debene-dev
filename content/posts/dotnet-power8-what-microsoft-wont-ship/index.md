@@ -267,7 +267,9 @@ Every .NET distro build works this way. Fedora's ppc64le .NET exists because *so
 
 The [scripts and patches](https://github.com/felipedbene/dotnet-power8) are published. The artifacts are preserved. Anyone with a ppc64le machine — POWER8, POWER9, POWER10 — can reproduce this build and extend the chain forward. The recipe works.
 
-This is what "building from source" actually means in 2026: not just compiling code, but **establishing a self-sustaining bootstrap lineage** on hardware the vendor abandoned. The POWER8 will keep running .NET long after Microsoft stopped caring.
+And here's the kicker: **Fedora dropped POWER8 .NET support in 2023.** Microsoft never shipped it at all. The last official ppc64le .NET binary is years old. What we built today isn't just a port — it's a **resurrection**. We took a dead platform, dug up the last surviving artifacts from Fedora's archives, and used them to bootstrap a living, current SDK on hardware that every vendor has written off.
+
+This is what "building from source" actually means in 2026: not just compiling code, but **establishing a self-sustaining bootstrap lineage** on hardware the industry abandoned. Years after both Microsoft and Fedora stopped caring, a guy in Chicago with an AI lobster and too much free time brought .NET back to POWER8. And now anyone can keep it alive.
 
 ## What's Next
 
