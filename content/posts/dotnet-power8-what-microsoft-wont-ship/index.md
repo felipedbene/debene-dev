@@ -286,6 +286,6 @@ This is what "building from source" actually means in 2026: not just compiling c
 
 ---
 
-*Built with 7 patches, 160 threads, an AI lobster named Garra, and an unreasonable amount of stubbornness. All because I wanted to watch movies on a mainframe.*
+*Built with 7 patches, 160 threads, an AI lobster named Garra, and an unreasonable amount of stubbornness. All because I wanted to watch movies on a mainframe — and Garra had already downloaded 122 of them for me, so I really had no excuse not to.*
 
 *— Felipe De Bene, Chicago, February 2026*
