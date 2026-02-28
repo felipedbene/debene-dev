@@ -4,8 +4,9 @@ date: 2026-02-27T00:00:00-06:00
 draft: false
 author: "Felipe De Bene"
 description: "Building the .NET 8 SDK entirely from source on an IBM POWER8 running Gentoo Linux — 7 patches, 160 threads, a Y2K bug, and an AI lobster named Garra helping via Discord."
-tags: ["POWER8", "ppc64le", ".NET", "dotnet", "source-build", "Gentoo", "IBM", "homelab", "alternative-computing", "Jellyfin", "AI"]
+tags: ["POWER8", "ppc64le", ".NET", "dotnet", "source-build", "Gentoo", "IBM", "homelab", "alternative-computing", "Jellyfin", "AI", "ppc"]
 categories: ["Hardware", "Software Engineering"]
+series: ["PowerPC Saga"]
 cover:
     image: "images/grafana-full-build.png"
     alt: "Grafana dashboard showing 160 POWER8 threads compiling .NET 8 SDK"

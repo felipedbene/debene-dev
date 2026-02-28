@@ -4,8 +4,9 @@ date: 2025-05-22T00:00:00-05:00
 draft: false
 author: "Felipe De Bene"
 description: "The Dream: A teenage obsession with the iBook G4 finally fulfilled two decades later. A journey through SSD upgrades, broken power buttons, distro hopping, and building a Kubernetes-powered compile farm."
-tags: ["iBook-G4", "PowerPC", "Gentoo", "retro-computing", "AltiVec", "Kubernetes", "distcc", "Linux"]
+tags: ["iBook-G4", "PowerPC", "Gentoo", "retro-computing", "AltiVec", "Kubernetes", "distcc", "Linux", "ppc"]
 categories: ["Hardware", "Retro Computing", "Linux"]
+series: ["PowerPC Saga"]
 cover:
     image: "images/cover.png"
     alt: "iBook G4 white clamshell laptop"
@@ -164,3 +165,11 @@ Final thought: The G4 is now technically a cloud-native microservice.
 ---
 
 *🛠️ [Full distcc cluster setup on GitHub](https://github.com/felipedbene/distcc) — if you dare. Originally published on [Medium](https://medium.com/@felipedebene/resurrecting-my-ibook-g4-a-20-year-dream-built-on-compiler-errors-and-hope-fd78b37c9865).*
+
+---
+
+### 📚 The PowerPC Saga continues:
+
+2. [Cloud Architect Meets PowerPC: The $50 Time Machine](/posts/cloud-architect-meets-powerpc/) — A PowerMac G5 joins the fleet
+3. [What Microsoft Won't Ship: .NET on POWER8](/posts/dotnet-power8-what-microsoft-wont-ship/) — Building .NET 8 from source on enterprise POWER
+4. [Jellyfin on POWER8: 160 Threads of Media Serving](/posts/jellyfin-power8-160-threads-of-media-serving/) — Containerized media server on IBM iron

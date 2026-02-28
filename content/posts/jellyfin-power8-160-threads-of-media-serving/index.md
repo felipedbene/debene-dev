@@ -4,7 +4,7 @@ date: 2026-02-28T17:00:00-06:00
 draft: false
 tags: ["power8", "ppc64le", "jellyfin", "dotnet", "homelab", "fedora", "ibm", "alternative-computing"]
 categories: ["Alternative Computing"]
-series: ["POWER8 Saga"]
+series: ["PowerPC Saga"]
 description: "Running Jellyfin 10.11 on an IBM POWER8 server with .NET 10 — a tale of 9 build attempts, zero Dart VMs, and one very stubborn lobster."
 ---
 
@@ -246,13 +246,15 @@ After two rounds of building .NET applications on POWER8, a pattern emerges. Thi
 
 **The software ecosystem is the bottleneck, not the hardware.** POWER8 can run anything that compiles for ppc64le. The problems are always binary dependencies that only ship for x86 and ARM.
 
-## The POWER8 Saga
+## The PowerPC Saga
 
-This machine keeps giving me stories to tell:
+From a $67 iBook to a $30,000 enterprise server — one architecture, four stories:
 
-1. **[What Microsoft Won't Ship: .NET on POWER8](/posts/dotnet-power8-what-microsoft-wont-ship/)** — Compiling the .NET 8 SDK entirely from source. 6 hours, 7 patches, 26 repos.
-2. **Jellyfin on POWER8: 160 Threads of Media Serving** ← You are here. 9 build attempts, containerized Jellyfin 10.11 with .NET 10.
-3. **Coming soon**: Transcoding benchmarks — 160 POWER8 threads vs my x86 cluster. CPU-only media encoding showdown.
+1. 🍎 **[Resurrecting My iBook G4](/posts/resurrecting-my-ibook-g4/)** — A 20-year dream fulfilled. SSD upgrades, broken power buttons, and a Kubernetes-powered compile farm for a 1.33GHz laptop.
+2. 🖥️ **[Cloud Architect Meets PowerPC: The $50 Time Machine](/posts/cloud-architect-meets-powerpc/)** — A PowerMac G5 from a guy named Ray. Big Endian, Open Firmware, and discovering the forgotten world of pre-Intel Apple.
+3. ⚡ **[What Microsoft Won't Ship: .NET on POWER8](/posts/dotnet-power8-what-microsoft-wont-ship/)** — Compiling the .NET 8 SDK entirely from source. 6 hours, 7 patches, 26 repos, 160 threads of SMT8.
+4. 🎬 **Jellyfin on POWER8: 160 Threads of Media Serving** ← You are here. 9 build attempts, containerized Jellyfin 10.11 with .NET 10 on Fedora 43.
+5. 🔜 **Coming soon**: Transcoding benchmarks — 160 POWER8 threads vs x86. The CPU-only showdown.
 
 ## Source
 

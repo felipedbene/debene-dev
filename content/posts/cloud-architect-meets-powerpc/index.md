@@ -4,8 +4,9 @@ date: 2025-08-31T00:00:00-05:00
 draft: false
 author: "Felipe De Bene"
 description: "For fifty bucks, I got myself a time machine. A journey into resurrecting a PowerMac G5 and discovering the forgotten world of Big Endian computing."
-tags: ["PowerPC", "G5", "retro-computing", "Linux", "OpenFirmware", "endianness", "Adelie"]
+tags: ["PowerPC", "G5", "retro-computing", "Linux", "OpenFirmware", "endianness", "Adelie", "ppc"]
 categories: ["Hardware", "Retro Computing"]
+series: ["PowerPC Saga"]
 cover:
     image: "images/cover.jpeg"
     alt: "PowerMac G5 aluminum tower"
@@ -98,3 +99,11 @@ So that's where I'm leaving it for now: cooking up an API-driven Spotify client 
 ---
 
 *Originally published on [Medium](https://medium.com/@felipedebene/cloud-architect-meets-powerpc-the-50-time-machine-f87ecd7deb83).*
+
+---
+
+### 📚 The PowerPC Saga continues:
+
+1. [Resurrecting My iBook G4](/posts/resurrecting-my-ibook-g4/) — Where it all started: a $67 laptop and a teenage dream
+3. [What Microsoft Won't Ship: .NET on POWER8](/posts/dotnet-power8-what-microsoft-wont-ship/) — From consumer PowerPC to enterprise POWER8
+4. [Jellyfin on POWER8: 160 Threads of Media Serving](/posts/jellyfin-power8-160-threads-of-media-serving/) — Containerized Jellyfin with .NET 10 on 160 threads
