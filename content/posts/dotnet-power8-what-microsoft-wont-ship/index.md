@@ -257,6 +257,18 @@ From `dotnet: command not found` to a working media server. On a Friday. With an
 
 6. **The homelab is the ultimate test lab.** Physical access, Grafana on a second monitor, tmux sessions on the metal. No deployment pipeline. No CI queue. Just SSH and stubbornness.
 
+## The First Turtle: Building for Eternity
+
+Here's what makes this more than a weekend hack: **we didn't just build a binary — we built a recipe and a bootstrap chain.**
+
+The `.NET 8 SDK` we compiled today produces `Private.SourceBuilt.Artifacts` — the same kind of artifact tarball we bootstrapped *from*. That means this build's output can bootstrap the next one. .NET 9 on POWER8? We now have the seed. .NET 10? Same seed, new tree.
+
+Every .NET distro build works this way. Fedora's ppc64le .NET exists because *someone, at some point, placed the first turtle*. That bootstrap chain has been maintained across Fedora releases ever since. Today, we placed our own first turtle — on Gentoo, on POWER8, outside of any distro's build infrastructure.
+
+The [scripts and patches](https://github.com/felipedbene/dotnet-power8) are published. The artifacts are preserved. Anyone with a ppc64le machine — POWER8, POWER9, POWER10 — can reproduce this build and extend the chain forward. The recipe works.
+
+This is what "building from source" actually means in 2026: not just compiling code, but **establishing a self-sustaining bootstrap lineage** on hardware the vendor abandoned. The POWER8 will keep running .NET long after Microsoft stopped caring.
+
 ## What's Next
 
 - **Transcoding benchmarks** — 160 POWER8 threads vs x86 Quick Sync/NVENC. The whole reason for this madness.
