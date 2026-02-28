@@ -16,7 +16,7 @@ jobs:
 
       - name: Build container image (Hugo + nginx)
         run: |
-          sudo /usr/local/bin/nerdctl --namespace k8s.io build \
+          sudo /usr/local/bin/nerdctl --namespace k8s.io build --no-cache \
             -t blog-debene-dev:latest \
             -t blog-debene-dev:${{ github.sha }} .
 
