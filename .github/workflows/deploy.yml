@@ -21,6 +21,8 @@ jobs:
             -t blog-debene-dev:${{ github.sha }} .
 
       - name: Deploy
+        env:
+          KUBECONFIG: /home/runner/.kube/config
         run: |
           kubectl -n blog rollout restart deployment/blog
           kubectl -n blog rollout status deployment/blog --timeout=120s
@@ -31,21 +33,12 @@ jobs:
             "https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/purge_cache" \
             -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
             -H "Content-Type: application/json" \
-            --data '{"purge_everything":true}' | jq .success
+            --data '{"purge_everything":true}'
+          echo "✅ Cache purged"
 
-      - name: Notify Discord
+      - name: Summary
         if: always()
         run: |
-          STATUS="${{ job.status }}"
-          COMMIT="${{ github.event.head_commit.message }}"
-          SHA="${{ github.sha }}"
-          SHORT_SHA="${SHA:0:7}"
-          if [ "$STATUS" = "success" ]; then
-            EMOJI="✅"
-            MSG="Blog deployed! \`${SHORT_SHA}\` — ${COMMIT}"
-          else
-            EMOJI="❌"
-            MSG="Deploy failed! \`${SHORT_SHA}\` — ${COMMIT}"
-          fi
-          # Notification via webhook or just log
-          echo "${EMOJI} ${MSG}"
+          echo "### Deploy ${{ job.status }} 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** https://debene.dev" >> $GITHUB_STEP_SUMMARY
