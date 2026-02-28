@@ -7,8 +7,8 @@ description: "Building the .NET 8 SDK entirely from source on an IBM POWER8 runn
 tags: ["POWER8", "ppc64le", ".NET", "dotnet", "source-build", "Gentoo", "IBM", "homelab", "alternative-computing", "Jellyfin", "AI"]
 categories: ["Hardware", "Software Engineering"]
 cover:
-    image: "images/p8-machine.png"
-    alt: "IBM S822 POWER8 server standing in a Chicago apartment"
+    image: "images/grafana-full-build.png"
+    alt: "Grafana dashboard showing 160 POWER8 threads compiling .NET 8 SDK"
     relative: true
 ShowToc: true
 TocOpen: false
@@ -26,7 +26,14 @@ Yes, in 2026. We'll get to that.
 
 ## The Machine
 
-{{< figure src="images/p8-machine.png" alt="IBM S822 POWER8 server" caption="The IBM S822 — 20 cores, 160 threads of POWER8, casually standing in my Chicago apartment like a refrigerator-sized conversation piece." >}}
+If you've been following this series, you already know The Beast. If not, here's the backstory:
+
+1. **[Cloud Architect Meets PowerPC: The $50 Time Machine](/posts/cloud-architect-meets-powerpc/)** — where it all started, with a PowerMac G5 from eBay
+2. **[Who Says Elephants Can't Dance? POWER8 vs Intel i9-12900K](/posts/who-says-elephants-cant-dance/)** — benchmarking 160 POWER8 threads against modern x86
+3. **[Running Enterprise Java on AIX 7.2 with POWER8 KVM](/posts/aix-power8-enterprise-java/)** — running IBM's proprietary UNIX inside KVM on Gentoo
+4. **[34 Commits of Chaos: DayTrader, AIX, and Knowing When to Pivot](/posts/aix-power8-daytrader-modernization/)** — modernizing a 2005 Java EE app on AIX
+
+The short version: I bought an IBM S822 off eBay, put Gentoo Linux on it, and have been finding increasingly absurd things to run on it ever since.
 
 | Spec | Value |
 |------|-------|
@@ -36,7 +43,7 @@ Yes, in 2026. We'll get to that.
 | Storage | 444 GB SSD |
 | OS | Gentoo Linux ppc64le, kernel 6.17.7 |
 
-This machine already runs Kubernetes 1.35 with WordPress, Strapi, and PostgreSQL. But the new mission was **Jellyfin** — an open-source media server — for CPU-only video transcoding. With 160 hardware threads, I wanted to benchmark POWER8's brute-force parallelism against modern x86 hardware with Quick Sync or NVENC.
+This machine already runs Kubernetes 1.35 with WordPress, Strapi, and PostgreSQL. It runs AIX 7.2 in a KVM VM with WebSphere Liberty and DayTrader. But the new mission was **Jellyfin** — an open-source media server — for CPU-only video transcoding. With 160 hardware threads, I wanted to benchmark POWER8's brute-force parallelism against modern x86 hardware with Quick Sync or NVENC.
 
 But Jellyfin is written in C#. C# means .NET. And .NET doesn't exist for POWER8.
 
