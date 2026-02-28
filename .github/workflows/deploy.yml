@@ -3,6 +3,7 @@ name: Deploy Blog
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
@@ -23,3 +24,28 @@ jobs:
         run: |
           kubectl -n blog rollout restart deployment/blog
           kubectl -n blog rollout status deployment/blog --timeout=120s
+
+      - name: Purge Cloudflare cache
+        run: |
+          curl -sf -X POST \
+            "https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/purge_cache" \
+            -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            --data '{"purge_everything":true}' | jq .success
+
+      - name: Notify Discord
+        if: always()
+        run: |
+          STATUS="${{ job.status }}"
+          COMMIT="${{ github.event.head_commit.message }}"
+          SHA="${{ github.sha }}"
+          SHORT_SHA="${SHA:0:7}"
+          if [ "$STATUS" = "success" ]; then
+            EMOJI="✅"
+            MSG="Blog deployed! \`${SHORT_SHA}\` — ${COMMIT}"
+          else
+            EMOJI="❌"
+            MSG="Deploy failed! \`${SHORT_SHA}\` — ${COMMIT}"
+          fi
+          # Notification via webhook or just log
+          echo "${EMOJI} ${MSG}"
