@@ -293,6 +293,10 @@ This is what "building from source" actually means in 2026: not just compiling c
 
 ---
 
+**Update**: The POWER8 saga continues! Part 2 is now live: **[Jellyfin on POWER8: 160 Threads of Media Serving](/posts/jellyfin-power8-160-threads-of-media-serving/)** — building and running Jellyfin 10.11 with .NET 10, containerized on Fedora 43. Nine build attempts, zero Dart VMs, and a published container image on GHCR.
+
+---
+
 *Built with 7 patches, 160 threads, an AI lobster named Garra, and an unreasonable amount of stubbornness. All because I wanted to watch movies on a mainframe — and Garra had already downloaded 122 of them for me, so I really had no excuse not to.*
 
 *— Felipe De Bene, Chicago, February 2026*
