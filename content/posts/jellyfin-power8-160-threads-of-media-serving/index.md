@@ -6,6 +6,12 @@ tags: ["power8", "ppc64le", "jellyfin", "dotnet", "homelab", "fedora", "ibm", "a
 categories: ["Alternative Computing"]
 series: ["PowerPC Saga"]
 description: "Running Jellyfin 10.11 on an IBM POWER8 server with .NET 10 — a tale of 9 build attempts, zero Dart VMs, and one very stubborn lobster."
+cover:
+    image: "images/fastfetch.png"
+    alt: "fastfetch output on P8 Fedora showing POWER8 160 threads"
+    relative: true
+ShowToc: true
+TocOpen: false
 ---
 
 *This is Part 2 of the [POWER8 Saga](#the-power8-saga). Part 1: [What Microsoft Won't Ship: .NET on POWER8](/posts/dotnet-power8-what-microsoft-wont-ship/)*
@@ -26,6 +32,8 @@ The **IBM S822 (8335-GCA)** is a 2U rackmount server that IBM launched in 2014 f
 - PCIe Gen3 slots for days
 
 This thing idles at 400W and sounds like a small aircraft. I love it.
+
+![Grafana dashboard showing POWER8 metrics — 160 threads, 128GB RAM, CPU spikes from the Jellyfin build](images/grafana-p8.png "Grafana Node Exporter dashboard for the P8 — those CPU spikes are webpack contemplating its life choices on 160 threads")
 
 If you're wondering why someone would run a media server on enterprise POWER hardware — you're asking the wrong question. The right question is: **why wouldn't you?**
 
