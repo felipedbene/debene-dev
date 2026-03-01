@@ -1,6 +1,6 @@
 ---
 title: "The Transcoding Showdown: POWER8 vs Dual Xeon — Who Buffers First?"
-date: 2026-02-28T19:00:00-06:00
+date: 2026-02-28T18:00:00-06:00
 draft: false
 author: "Felipe De Bene"
 description: "160 POWER8 threads vs 28 Xeon threads in a real-world media transcoding benchmark. Spoiler: the elephant dances when the floor gets crowded."
