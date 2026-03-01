@@ -4,8 +4,9 @@ date: 2025-11-06T00:00:00-06:00
 draft: false
 author: "Felipe De Bene"
 description: "A Tale of Two Philosophies: When 160 Threads Meet Modern Silicon. Can a 2015 IBM POWER8 server compete with Intel's 2021 flagship? The answer might surprise you."
-tags: ["hardware", "benchmarking", "POWER8", "Intel", "performance", "architecture", "PowerPC", "SMT"]
+tags: ["hardware", "benchmarking", "POWER8", "Intel", "performance", "architecture", "PowerPC", "SMT", "ppc"]
 categories: ["Hardware", "Performance Testing"]
+series: ["PowerPC Saga"]
 cover:
     image: "images/beast.png"
     alt: "IBM POWER8 S822LC server"
@@ -277,3 +278,13 @@ gcc -O3 -march=native -msse4.2 -mfma benchmark.c -o benchmark -pthread
 ---
 
 *Originally published on [Medium](https://medium.com/@felipedebene/who-says-elephants-cant-dance-power8-vs-intel-i9-12900k-showdown-cf85c2d66c60).*
+
+---
+
+### 📚 The PowerPC Saga continues:
+
+1. [Resurrecting My iBook G4](/posts/resurrecting-my-ibook-g4/) — Where it started: a $67 laptop and a teenage dream
+2. [Cloud Architect Meets PowerPC: The $50 Time Machine](/posts/cloud-architect-meets-powerpc/) — A PowerMac G5 joins the fleet
+3. **Who Says Elephants Can't Dance?** ← You are here. POWER8 vs i9-12900K benchmark showdown
+4. [What Microsoft Won't Ship: .NET on POWER8](/posts/dotnet-power8-what-microsoft-wont-ship/) — Building .NET 8 from source on enterprise POWER
+5. [Jellyfin on POWER8: 160 Threads of Media Serving](/posts/jellyfin-power8-160-threads-of-media-serving/) — Containerized media server + transcoding benchmarks
