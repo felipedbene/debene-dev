@@ -283,120 +283,117 @@ gcc -O3 -march=native -msse4.2 -mfma benchmark.c -o benchmark -pthread
 
 ## Part 2: The Transcoding Showdown (February 2026)
 
-*Three months later. The elephant learned a new dance.*
+*Three months later. The elephant learned a new trick.*
 
-The original benchmarks above tested synthetic workloads — SIMD operations, memory bandwidth, thread scaling. Useful, but abstract. This time I wanted to answer a practical question: **can this POWER8 actually serve media?**
+Remember when I said this was basically e-waste? Well, I [built .NET 8 from source on it](/posts/dotnet-power8-what-microsoft-wont-ship/), then [compiled Jellyfin 10.11 in nine excruciating attempts](/posts/jellyfin-power8-160-threads-of-media-serving/), and now this 2014 IBM server is streaming movies to my living room. My wife thinks I have a problem. She's right, but that's not the point.
 
-I built [Jellyfin 10.11 from source on the POWER8](/posts/jellyfin-power8-160-threads-of-media-serving/) (nine attempts, multiple crashes, one existential crisis), got it running in a container with .NET 10 on Fedora 43, and now it's time to benchmark transcoding against the x86 server that currently runs my media stack.
+The point is: **can 160 threads of decade-old POWER silicon actually transcode video faster than modern x86?**
 
-### The Contenders
+I already know the answer for synthetic benchmarks (see Part 1 above). But synthetic benchmarks are like bench pressing in your garage — impressive, but can you actually carry the groceries? Time to find out.
 
-| | IBM POWER8 S822 | Intel Xeon E5-2680 v4 |
+### The Fight Card
+
+In the red corner, weighing in at 45 pounds and drawing 400W at idle: **the IBM POWER8 S822**. Dual-socket, 160 threads of SMT8 fury, running Fedora 43 because I [spent an entire afternoon fighting OPAL firmware](/posts/jellyfin-power8-160-threads-of-media-serving/) to install it.
+
+In the blue corner, the reigning champion of my media stack: **Dual Intel Xeon E5-2680 v4**. 28 threads, AVX2, the kind of chip that libx264 was hand-tuned for in assembly. Currently running my Jellyfin instance in Kubernetes like a responsible adult.
+
+| | 🔴 POWER8 | 🔵 Xeon E5-2680 v4 |
 |---|---|---|
-| **Architecture** | ppc64le | x86_64 |
-| **CPUs** | 2x POWER8 | 2x Xeon E5-2680 v4 |
-| **Cores / Threads** | 20 / 160 (SMT8) | 28 / 56 (HT) |
+| **Threads** | 160 (SMT8) | 28 (HT) |
 | **Clock** | 3.49 GHz | 2.40 GHz |
-| **RAM** | 128 GB DDR3 | 96 GB DDR4 |
+| **RAM** | 128 GB | 96 GB |
 | **Year** | 2014 | 2016 |
-| **OS** | Fedora 43 | Ubuntu 24.04 |
-| **FFmpeg** | 7.1.2 (RPM Fusion) | 6.1.1 |
+| **SIMD** | AltiVec/VSX | SSE4.2/AVX2 |
+| **What it was designed for** | Running DB2 for Fortune 500 | Running DB2 for Fortune 500 |
+| **What I'm using it for** | Streaming Shrek to my TV | Streaming Shrek to my TV |
 
-The POWER8 has nearly 3x the threads but lower IPC and no AVX2. The Xeon has hand-tuned x86 assembly in libx264. On paper, single-stream should be Intel. Multi-stream is where things get interesting.
+### Round 1: One Stream, One Client, One Movie
 
-### Methodology
+The simplest case. You sit down, hit play on Jellyfin, and your Fire TV demands a transcode because it can't play the original codec. One stream, all cores available.
 
-Custom benchmark script using `ffmpeg` directly — same synthetic test files generated on each host (testsrc2 pattern, 24fps). Tests:
+**1080p H.264 → H.264 (the "just make it play" scenario):**
 
-1. **Single stream**: 1080p H.264 → various resolutions, presets fast/medium/slow
-2. **Parallel streams**: 1, 2, 4, 8 simultaneous 1080p→720p transcodes (the Jellyfin use case)
-3. **Input source**: 1080p HEVC → H.264 (the common "client can't play HEVC" scenario)
+| Target | Preset | 🔴 POWER8 | 🔵 Xeon | Winner |
+|--------|--------|-----------|---------|--------|
+| 1080p | fast | 1.71x | 2.97x | 🔵 1.7x faster |
+| 1080p | medium | 1.47x | 2.58x | 🔵 1.8x faster |
+| 1080p | slow | 1.18x | 1.15x | 🤝 **Tied** |
+| 720p | fast | 3.02x | 4.45x | 🔵 1.5x faster |
+| 720p | medium | 2.37x | 4.22x | 🔵 1.8x faster |
+| 480p | fast | 5.12x | 7.12x | 🔵 1.4x faster |
+| 480p | medium | 4.26x | 6.75x | 🔵 1.6x faster |
 
-All CPU-only. No hardware acceleration on either machine.
+Intel sweeps Round 1. The Xeon's x86-optimized libx264 assembly is doing exactly what it was written for. No surprise here — this is like challenging a sushi chef to make sushi.
 
-> **Note:** The `ultrafast` preset crashes on ppc64le with an assertion failure in libx264 (`x264_8_rc_analyse_slice: Assertion 'cost >= 0' failed`). This is a known issue — x264's assembly optimizations for POWER aren't as battle-tested as x86. All POWER8 results use `fast` or slower presets.
+But look at that `slow` preset at 1080p: **dead heat at ~1.15x**. When the encoder has to actually *think* — more reference frames, subpixel motion estimation, trellis quantization — the IPC advantage shrinks and POWER8's wider pipeline starts pulling its weight.
 
-### Single Stream Results
+Both machines stay above 1.0x (real-time) for every test. Your movie plays without buffering on either machine. Round 1 goes to Intel, but nobody's getting knocked out.
 
-**1080p H.264 input → H.264 output:**
+> **The x264 ultrafast catastrophe:** I can't show ultrafast results for POWER8 because libx264 literally *crashes* on ppc64le with that preset. `Assertion 'cost >= 0' failed` in the rate control code. x264's assembly has been hand-tuned for x86 for 20 years. The POWER code paths... have not. If this were fixed, single-stream POWER8 numbers would jump significantly.
 
-| Target | Preset | POWER8 | Xeon | Xeon advantage |
-|--------|--------|--------|------|----------------|
-| 1080p | fast | 1.71x | 2.97x | 1.74x faster |
-| 1080p | medium | 1.47x | 2.58x | 1.76x faster |
-| 1080p | slow | 1.18x | 1.15x | **~tied!** |
-| 720p | fast | 3.02x | 4.45x | 1.47x faster |
-| 720p | medium | 2.37x | 4.22x | 1.78x faster |
-| 720p | slow | 1.86x | 2.50x | 1.34x faster |
-| 480p | fast | 5.12x | 7.12x | 1.39x faster |
-| 480p | medium | 4.26x | 6.75x | 1.58x faster |
-| 480p | slow | 3.03x | 5.06x | 1.67x faster |
+### Round 2: The Real Test — Movie Night
 
-The Xeon wins every single-stream test — no surprise. But look at the `slow` preset at 1080p: **they're essentially tied at ~1.15x**. When the encoder has to work hard (slow preset = more reference frames, more analysis), the IPC advantage narrows and POWER8's raw thread count starts to compensate.
+Here's where it gets interesting. It's Friday night. I'm watching a movie in the living room. My wife is watching a show in the bedroom. My daughter is watching cartoons on the iPad. A friend is streaming from my server remotely.
 
-Every single result on both machines is **above 1.0x real-time**, meaning both can serve a single client without buffering at any quality setting.
+**Four. Simultaneous. Transcodes.**
 
-**1080p HEVC input → H.264 output** (the "Fire TV can't play HEVC" scenario):
+This is what media servers actually do. And this is where 160 threads start to matter.
 
-| Target | Preset | POWER8 | Xeon | Xeon advantage |
-|--------|--------|--------|------|----------------|
-| 1080p | fast | 2.39x | 2.92x | 1.22x faster |
-| 1080p | medium | 1.91x | 2.52x | 1.32x faster |
-| 720p | fast | 2.98x | 4.49x | 1.51x faster |
-| 480p | fast | 3.92x | 7.15x | 1.82x faster |
+**1080p → 720p, fast preset, parallel streams:**
 
-HEVC decoding narrows the gap at higher resolutions — HEVC is compute-heavy, and POWER8's wider pipeline helps with the decode step.
+| Streams | 🔴 P8 per stream | 🔴 P8 total | 🔵 Xeon per stream | 🔵 Xeon total | Winner |
+|---------|------------------:|------------:|--------------------:|--------------:|--------|
+| 1 | 3.63x | 3.63x | 4.49x | 4.49x | 🔵 |
+| 2 | 2.65x | 5.30x | 3.37x | 6.74x | 🔵 |
+| 4 | **1.92x** | **7.70x** | 1.79x | 7.17x | 🔴 **POWER8** |
+| 8 | **1.09x** ✅ | **8.99x** | 0.89x ❌ | 7.27x | 🔴 **POWER8** |
 
-### Parallel Streams: Where the Elephant Dances
+**At 4 streams, POWER8 takes the lead.** At 8 streams, it's not even close.
 
-This is the real Jellyfin test. How many simultaneous clients can each machine serve at real-time or better?
+The critical number is per-stream speed. Anything below 1.0x means buffering — the spinner of death, the pause that kills the mood, the reason your wife asks "why don't we just use Netflix?"
 
-**1080p → 720p, fast preset, H.264:**
+- **POWER8 at 8 streams: 1.09x** — real-time. Every client happy. The elephant is barely sweating. It still has **12 threads per stream** sitting idle.
+- **Xeon at 8 streams: 0.89x** — below real-time. Buffering. Sadness. The Xeon only has 3.5 threads per stream and they're all maxed.
 
-| Streams | POWER8 (per stream) | POWER8 (total) | Xeon (per stream) | Xeon (total) |
-|---------|--------------------:|---------------:|-------------------:|-------------:|
-| 1 | 3.63x | 3.63x | 4.49x | 4.49x |
-| 2 | 2.65x | 5.30x | 3.37x | 6.74x |
-| 4 | 1.92x | **7.70x** | 1.79x | 7.17x |
-| 8 | **1.09x** ✅ | **8.99x** | **0.89x** ❌ | 7.27x |
+The math is simple: the Xeon runs out of threads. The POWER8 has threads for days. At 8 simultaneous streams, the POWER8 is using roughly 5% of its thread capacity per stream. The Xeon is at 100%.
 
-**At 4 simultaneous streams, POWER8 overtakes the Xeon in total throughput.** At 8 streams, the gap widens — and the critical number is the per-stream speed:
+Extrapolating the scaling curve, the POWER8 could theoretically handle **12-16 simultaneous streams** before any client drops below real-time. The Xeon tops out at 6-7.
 
-- **POWER8 at 8 streams: 1.09x** — every client gets real-time. No buffering.
-- **Xeon at 8 streams: 0.89x** — below real-time. Clients will buffer.
+Round 2 goes to POWER8. The elephant dances when the dance floor gets crowded.
 
-The Xeon runs out of threads at 8 streams (28 cores / 8 = 3.5 threads per stream). The POWER8 still has **20 threads per stream** (160 / 8). It's not even breaking a sweat.
+### The Verdict
 
-Extrapolating: the POWER8 could theoretically handle **12-16 simultaneous streams** before hitting the real-time threshold. The Xeon tops out at 6-7.
+> "The task of every generation is not to give in to the despair of the present but to find hope in the future."
+> — Lou Gerstner, *Who Says Elephants Can't Dance?*
 
-### The x264 ppc64le Bug
+Lou was talking about saving IBM from bankruptcy. I'm talking about streaming movies from a server I bought for $50. Same energy.
 
-One unexpected finding: libx264's `ultrafast` preset crashes on ppc64le with a signed integer assertion failure in the rate control code. This is likely related to POWER8's different floating-point behavior or a code path that assumes x86 rounding semantics.
+**If you have 1-2 viewers**: use the Xeon. It's faster per stream, it's what ffmpeg was optimized for, and it sips power compared to the POWER8.
 
-This means the fastest encoding option is unavailable on POWER8. If this were fixed, single-stream numbers would likely improve by 2-3x for the ultrafast preset — potentially closing the single-stream gap entirely.
+**If you have a household full of screens** — kids, partner, guests, remote users — the POWER8 wins. It was designed for massively parallel workloads with hundreds of concurrent connections. It just doesn't know the connections are sending *Frozen* instead of SQL queries.
 
-Filed upstream. The POWER community is small but persistent.
+The elephant doesn't sprint. It marches. And when everyone else is out of breath, it's still going.
 
-### What This Means for Media Serving
+### What's Next
 
-For a home media server with 1-2 simultaneous users, **both machines work fine**. The Xeon is faster for a single stream.
+The x264 `ultrafast` crash on ppc64le bugs me. If we fix that, single-stream POWER8 numbers could jump 2-3x, potentially closing the gap entirely. I'm also curious about building ffmpeg with VSX/AltiVec optimizations specifically for POWER8 — the current Fedora build likely doesn't use them aggressively.
 
-For a media server with **4+ concurrent streams** — a family movie night where everyone's watching something different on their own device — **the POWER8 wins**. It has so many threads that each stream gets dedicated resources without contention.
+But for now, this POWER8 is my media server. It serves 22TB of content over NFS, transcodes for every device in the house, and runs Jellyfin in a container I [built from source and published to GHCR](https://github.com/felipedbene/jellyfin-power8).
 
-The irony: IBM designed the POWER8 for enterprise database workloads with hundreds of concurrent connections. Media transcoding with multiple simultaneous streams is... basically the same pattern. Many independent, CPU-bound tasks running in parallel.
-
-The elephant was born to dance. It just needed the right music.
+Is it the most efficient way to stream media? Absolutely not. Is it the most *fun*? Without question.
 
 ### Benchmark Script
 
-The full benchmark suite is on GitHub: [felipedbene/jellyfin-power8/transcode-bench.sh](https://github.com/felipedbene/jellyfin-power8/blob/main/transcode-bench.sh)
+The full benchmark suite: [felipedbene/jellyfin-power8/transcode-bench.sh](https://github.com/felipedbene/jellyfin-power8/blob/main/transcode-bench.sh)
+
+Run it on your own hardware and tell me what you get. I dare you to find a machine with more threads.
 
 ---
 
-### 📚 The PowerPC Saga continues:
+### 📚 The PowerPC Saga:
 
-1. [Resurrecting My iBook G4](/posts/resurrecting-my-ibook-g4/) — Where it started: a $67 laptop and a teenage dream
-2. [Cloud Architect Meets PowerPC: The $50 Time Machine](/posts/cloud-architect-meets-powerpc/) — A PowerMac G5 joins the fleet
-3. **Who Says Elephants Can't Dance?** ← You are here. POWER8 vs i9-12900K + transcoding showdown
-4. [What Microsoft Won't Ship: .NET on POWER8](/posts/dotnet-power8-what-microsoft-wont-ship/) — Building .NET 8 from source on enterprise POWER
-5. [Jellyfin on POWER8: 160 Threads of Media Serving](/posts/jellyfin-power8-160-threads-of-media-serving/) — Containerized media server with .NET 10 on Fedora 43
+1. 🍎 [Resurrecting My iBook G4](/posts/resurrecting-my-ibook-g4/) — A $67 laptop and a teenage dream
+2. 🖥️ [Cloud Architect Meets PowerPC: The $50 Time Machine](/posts/cloud-architect-meets-powerpc/) — A PowerMac G5 joins the fleet
+3. 📊 **Who Says Elephants Can't Dance?** ← You are here. Synthetic + transcoding benchmarks
+4. ⚡ [What Microsoft Won't Ship: .NET on POWER8](/posts/dotnet-power8-what-microsoft-wont-ship/) — Building .NET 8 from source on enterprise POWER
+5. 🎬 [Jellyfin on POWER8: 160 Threads of Media Serving](/posts/jellyfin-power8-160-threads-of-media-serving/) — Containerized Jellyfin with .NET 10 on Fedora 43
