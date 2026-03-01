@@ -263,7 +263,7 @@ From a $67 iBook to a $30,000 enterprise server — one architecture, five stori
 3. 📊 **[Who Says Elephants Can't Dance?](/posts/who-says-elephants-cant-dance/)** — POWER8 vs Intel i9-12900K benchmark showdown. Can raw parallelism beat modern IPC?
 4. ⚡ **[What Microsoft Won't Ship: .NET on POWER8](/posts/dotnet-power8-what-microsoft-wont-ship/)** — Compiling the .NET 8 SDK entirely from source. 6 hours, 7 patches, 26 repos, 160 threads of SMT8.
 5. 🎬 **Jellyfin on POWER8: 160 Threads of Media Serving** ← You are here. 9 build attempts, containerized Jellyfin 10.11 with .NET 10 on Fedora 43.
-6. 🔜 **Coming soon**: Transcoding benchmarks — 160 POWER8 threads vs Dual Xeon E5-2680 v4.
+6. 🥊 [The Transcoding Showdown](/posts/the-transcoding-showdown-power8-vs-xeon/) — POWER8 vs Dual Xeon: who buffers first?
 
 ## Source
 
