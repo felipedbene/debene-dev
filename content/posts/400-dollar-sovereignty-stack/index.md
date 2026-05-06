@@ -76,25 +76,13 @@ The new plan:
 - **Storage fabric** moves to **InfiniBand** — ConnectX-3 Pro dual-port 40GbE cards on every storage participant, IPoIB for NFS, $20 used cards from eBay because Mellanox enterprise gear depreciates beautifully.
 - **Longhorn gets retired.** Longhorn was always a compensation for not having dedicated storage. Once xeon2zfs is serving NFS over IB, the K8s cluster gets real storage and Longhorn becomes a complication I no longer need.
 
-In the meantime, while I wait for the 285H to ship and the xeon2socket migration to finalize, **TrueNAS SCALE 25.10.3 is already running on the existing xeon2socket hardware**, holding the line as interim storage:
-
-![27.27 TiB pool, 12.9% used, health: ONLINE. TrueNAS on xeon2socket, soon to be xeon2zfs once the data migration completes and the InfiniBand fabric comes up.](images/IMG_3211.png)
-
-That dashboard, by the way, is Grafana hitting Prometheus through dual exporters on TrueNAS — `node_exporter` with custom ARC metrics via textfile collector (port 9100), plus `zfs_exporter` for pool and dataset stats (port 9134). The whole thing is served over Ingress with cert-manager TLS, behind Authentik SSO, fronted by Cloudflare Zero Trust. Every layer of that stack is something I run, on hardware I own, with software I can read the source of. We'll come back to that in a minute.
+The infrastructure monitoring stack is already running — Grafana hitting Prometheus through dual exporters on TrueNAS (`node_exporter` with custom ARC metrics via textfile collector on port 9100, plus `zfs_exporter` for pool and dataset stats on port 9134). The whole thing is served over Ingress with cert-manager TLS, behind Authentik SSO, fronted by Cloudflare Zero Trust. Every layer of that stack is something I run, on hardware I own, with software I can read the source of.
 
 > **Sidebar: The L2ARC Question**
 > 
-> Right now I'm on Day 3 of a 7-day ARC performance monitoring campaign to decide whether to add L2ARC (Level 2 cache) using the NVMe drives you saw in that Amazon shipment screenshot. Current baseline: **97.22% demand data hit rate**, **89.8% ARC pressure**. If the hit rate stays above 95% consistently, L2ARC is overkill. If it drops below 90% under load, the NVMe goes in. 
+> Right now I'm on Day 3 of a 7-day ARC performance monitoring campaign to decide whether to add L2ARC (Level 2 cache) using NVMe drives. Current baseline: **97.22% demand data hit rate**, **89.8% ARC pressure**. If the hit rate stays above 95% consistently, L2ARC is overkill. If it drops below 90% under load, the NVMe goes in. 
 > 
 > This is what legibility buys you: the ability to measure, not guess. The metrics are in Prometheus. The decision will be data-driven. No vibes, no vendor whitepapers, no "best practices" from someone who's never seen my workload.
-
-## The cabling hellscape
-
-No homelab post is complete without acknowledging the cable situation. Here's the current state of the patch panel, in all its honesty:
-
-![The patch panel. Six-node MoCA 2.5 backbone (because pulling Cat6 through pre-war Chicago plaster is its own circle of hell), UniFi switching, enough blue patch cables to stock a small datacenter. Don't @ me.](images/IMG_3392.jpg)
-
-It works. It's been working. The InfiniBand fabric will get its own dedicated cabling because I refuse to mix 40Gbps storage traffic with Frigate camera streams on principle. The cable management will not improve. I've made peace with this.
 
 ## Now the actual point
 
@@ -145,7 +133,7 @@ The 285H ships May 8–14. RAM is on order (96GB DDR5 SODIMM, prices easing off)
 7. 🔲 Migrate K8s NFS workloads to IB-backed storage
 8. 🔲 Retire Longhorn
 9. 🔲 Receive the 285H, assemble, join to cluster
-10. 🔲 Write the follow-up post and pretend the cable management got better
+10. 🔲 Write the follow-up post
 
 I'll write the next one when it's all running. Whether or not the InfiniBand fabric humbles me on the way is, statistically speaking, the only real question. 🤞
 
