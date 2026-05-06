@@ -18,11 +18,14 @@ jobs:
           fetch-depth: 0
           path: debene-dev
 
-      - name: Build container image (Hugo + nginx)
+      - name: Build multi-arch container image (Hugo + nginx)
         run: |
-          sudo /usr/local/bin/nerdctl --namespace k8s.io build --no-cache \
+          sudo /usr/local/bin/nerdctl --namespace k8s.io build \
+            --platform linux/amd64,linux/arm64 \
+            --no-cache \
             -t blog-debene-dev:latest \
-            -t blog-debene-dev:${{ github.sha }} .
+            -t blog-debene-dev:${{ github.sha }} \
+            .
 
       - name: Deploy
         env:
@@ -45,4 +48,5 @@ jobs:
         run: |
           echo "### Deploy ${{ job.status }} 🚀" >> $GITHUB_STEP_SUMMARY
           echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Platforms:** linux/amd64, linux/arm64" >> $GITHUB_STEP_SUMMARY
           echo "**URL:** https://debene.dev" >> $GITHUB_STEP_SUMMARY
