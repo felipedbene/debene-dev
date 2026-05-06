@@ -1,7 +1,7 @@
 ---
 title: "Cross-Flashing a Mellanox ConnectX-3 Pro: Or How I Learned to Stop Worrying and Love InfiniBand"
 subtitle: "40 Gbps for $20, if you're willing to risk bricking a card at 2 AM"
-date: 2026-05-08T09:00:00-05:00
+date: 2026-05-06T13:18:00-05:00
 draft: false
 tags: ["infiniband", "mellanox", "connectx-3", "networking", "homelab", "firmware", "crossflash", "rdma"]
 categories: ["Infrastructure", "Homelab", "Networking"]
