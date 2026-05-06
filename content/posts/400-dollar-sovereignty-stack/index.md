@@ -67,16 +67,16 @@ Current state of the nodes:
 | intel9 | i9-12900K | K8s worker (UHD 770 iGPU + Tesla P4) | Active |
 | xeon2socket | Dual Xeon E5 | K8s worker | **Decommissioned** |
 
-xeon2socket served honorably for years. Two physical CPUs, 94GB of ECC RAM, ran Frigate against the Tesla P4, hosted Longhorn replicas. But it drew 180W idle and the dual-socket Sandy Bridge platform is finally showing its age — no AVX-512, no AES-NI acceleration that anyone cares about in 2026, and a PCIe 3.0 ceiling that bottlenecks anything modern.
+xeon2socket served honorably for years as a K8s worker. The name is a legacy artifact from when it actually had two physical CPU sockets — it's been single-socket for a while now, but the hostname stuck. Dual Xeon E5, 94GB of ECC RAM, ran Frigate, hosted Longhorn replicas. But it drew 180W idle and the platform was showing its age — no AVX-512, no modern AES-NI, and a PCIe 3.0 ceiling that bottlenecks anything current.
 
 The new plan:
 
-- **285H** takes over the K8s worker duties xeon2socket used to handle — and then some, because Arrow Lake-H at 16 cores eats Sandy Bridge for breakfast at half the wattage.
-- **xeon2socket** gets reformatted, renamed **xeon2zfs**, and becomes a dedicated **TrueNAS SCALE** box. The Tesla P4 stays for transcoding. The 94GB of RAM becomes ZFS ARC cache, which is exactly what 94GB of RAM was born to do.
+- **285H** takes over the K8s worker duties xeon2socket used to handle — and then some, because Arrow Lake-H at 16 cores eats old Xeons for breakfast at half the wattage.
+- **xeon2socket** gets renamed **xeon2zfs** and becomes a dedicated **TrueNAS SCALE** box. The 94GB of RAM becomes ZFS ARC cache, which is exactly what 94GB of RAM was born to do.
 - **Storage fabric** moves to **InfiniBand** — ConnectX-3 Pro dual-port 40GbE cards on every storage participant, IPoIB for NFS, $20 used cards from eBay because Mellanox enterprise gear depreciates beautifully.
 - **Longhorn gets retired.** Longhorn was always a compensation for not having dedicated storage. Once xeon2zfs is serving NFS over IB, the K8s cluster gets real storage and Longhorn becomes a complication I no longer need.
 
-In the meantime, while I wait for the 285H to ship and the final pieces to fall into place, **TrueNAS SCALE 25.10.3 is already running on the existing xeon2socket hardware**, holding the line as interim storage:
+**TrueNAS SCALE 25.10.3 is already running on xeon2socket** — now serving as permanent storage, ConnectX-3 installed, InfiniBand operational:
 
 ![27.27 TiB pool, 12.9% used, health: ONLINE. TrueNAS on xeon2socket, soon to be xeon2zfs once the data migration completes and the InfiniBand fabric comes up.](images/IMG_3211.jpg)
 
@@ -147,8 +147,8 @@ This is what *capability* looks like, as opposed to *access*. And it turns out c
 The 285H ships May 8–14. RAM is on order (96GB DDR5 SODIMM, prices easing off). The migration sequence is mostly behind me now, but the checklist looks like this:
 
 1. ✅ TrueNAS SCALE installed on xeon2socket
-2. ✅ K8s storage migrated to interim TrueNAS NFS
-3. ✅ ConnectX-3 cards installed in intel9 and xeon2zfs
+2. ✅ K8s storage migrated to TrueNAS NFS
+3. ✅ ConnectX-3 cards installed in intel9 and xeon2socket
 4. ✅ InfiniBand fabric UP (40 Gbps FDR operational)
 5. ✅ IPoIB configured, K8s hitting storage over IB
 6. 🔲 Finalize xeon2socket → xeon2zfs rename
