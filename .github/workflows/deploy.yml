@@ -8,11 +8,15 @@ on:
 jobs:
   build-and-deploy:
     runs-on: [self-hosted, homelab]
+    defaults:
+      run:
+        working-directory: debene-dev
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: true
           fetch-depth: 0
+          path: debene-dev
 
       - name: Build container image (Hugo + nginx)
         run: |
