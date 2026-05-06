@@ -76,13 +76,35 @@ The new plan:
 - **Storage fabric** moves to **InfiniBand** — ConnectX-3 Pro dual-port 40GbE cards on every storage participant, IPoIB for NFS, $20 used cards from eBay because Mellanox enterprise gear depreciates beautifully.
 - **Longhorn gets retired.** Longhorn was always a compensation for not having dedicated storage. Once xeon2zfs is serving NFS over IB, the K8s cluster gets real storage and Longhorn becomes a complication I no longer need.
 
-The infrastructure monitoring stack is already running — Grafana hitting Prometheus through dual exporters on TrueNAS (`node_exporter` with custom ARC metrics via textfile collector on port 9100, plus `zfs_exporter` for pool and dataset stats on port 9134). The whole thing is served over Ingress with cert-manager TLS, behind Authentik SSO, fronted by Cloudflare Zero Trust. Every layer of that stack is something I run, on hardware I own, with software I can read the source of.
+In the meantime, while I wait for the 285H to ship and the final pieces to fall into place, **TrueNAS SCALE 25.10.3 is already running on the existing xeon2socket hardware**, holding the line as interim storage:
+
+![27.27 TiB pool, 12.9% used, health: ONLINE. TrueNAS on xeon2socket, soon to be xeon2zfs once the data migration completes and the InfiniBand fabric comes up.](images/IMG_3211.jpg)
+
+That dashboard, by the way, is Grafana hitting Prometheus through dual exporters on TrueNAS — `node_exporter` with custom ARC metrics via textfile collector (port 9100), plus `zfs_exporter` for pool and dataset stats (port 9134). The whole thing is served over Ingress with cert-manager TLS, behind Authentik SSO, fronted by Cloudflare Zero Trust. Every layer of that stack is something I run, on hardware I own, with software I can read the source of. We'll come back to that.
 
 > **Sidebar: The L2ARC Question**
 > 
 > Right now I'm on Day 3 of a 7-day ARC performance monitoring campaign to decide whether to add L2ARC (Level 2 cache) using NVMe drives. Current baseline: **97.22% demand data hit rate**, **89.8% ARC pressure**. If the hit rate stays above 95% consistently, L2ARC is overkill. If it drops below 90% under load, the NVMe goes in. 
 > 
 > This is what legibility buys you: the ability to measure, not guess. The metrics are in Prometheus. The decision will be data-driven. No vibes, no vendor whitepapers, no "best practices" from someone who's never seen my workload.
+
+## InfiniBand: It Actually Works
+
+Here's the thing about enterprise hardware nobody tells you: once you've paid the depreciation tax, it just *works*. No finessing, no "well actually," no Reddit threads about kernel modules. You plug it in, configure OpenSM, and suddenly you're moving data at 40 Gbps over cables that cost $8 on eBay.
+
+![ibnetdiscover output showing ConnectX-3 Pro cards on both ends of the fabric. Two nodes, two ports, zero configuration drama.](images/IMG_IB_netdiscover.jpg)
+
+The ConnectX-3 Pro cards dropped into intel9 and the xeon2zfs box like they'd been waiting there all along. `ibnetdiscover` sees them both. `ibstat` reports Port 2 ACTIVE, Rate 40, physical state LinkUp. No ambiguity, no "might be working," no tcpdump sessions at 2 AM trying to figure out why MTU 9000 isn't actually 9000.
+
+![ibstat showing Port 2 ACTIVE, Rate 40 Gbps, physical state LinkUp. This is what "it works" looks like.](images/IMG_IB_stat.jpg)
+
+And the throughput? **7022.72 Mbit/sec** on `ib_rc_pingpong`, which translates to roughly 7 Gbps of actual usable bandwidth after protocol overhead. For context, my previous NFS-over-1GbE setup was doing maybe 900 Mbps on a good day. This is *eight times faster*, and I'm not even tuned yet.
+
+![ib_rc_pingpong showing 7022.72 Mbit/sec throughput. Eight times faster than 1GbE, and we haven't even started optimizing.](images/IMG_IB_pingpong.jpg)
+
+IPoIB is configured, the subnets are talking, and the K8s cluster is already hitting TrueNAS over the InfiniBand fabric. The latency difference is *visceral* — `kubectl get pods` returns before I've finished typing the command. Longhorn used to take 4–6 seconds to provision a new PVC. The IB-backed NFS does it in under two.
+
+This is what I mean when I talk about *capability*. Not "faster storage" in some abstract benchmark sense, but the ability to run `kubectl apply` and have it *complete* before my brain context-switches. The substrate responds at the speed I think.
 
 ## Now the actual point
 
@@ -122,20 +144,21 @@ This is what *capability* looks like, as opposed to *access*. And it turns out c
 
 ## What's next
 
-The 285H ships May 8–14. RAM is on order (96GB DDR5 SODIMM, prices easing off). ConnectX-3 cards are stacked on the shelf waiting for their slots. The migration sequence is roughly:
+The 285H ships May 8–14. RAM is on order (96GB DDR5 SODIMM, prices easing off). The migration sequence is mostly behind me now, but the checklist looks like this:
 
 1. ✅ TrueNAS SCALE installed on xeon2socket
 2. ✅ K8s storage migrated to interim TrueNAS NFS
-3. 🔲 Finalize xeon2socket → xeon2zfs rename and network config
-4. 🔲 Swap Tesla P4 → ConnectX-3 in xeon2zfs
-5. 🔲 Install ConnectX-3 in intel9
-6. 🔲 Stand up the InfiniBand fabric, configure IPoIB
-7. 🔲 Migrate K8s NFS workloads to IB-backed storage
-8. 🔲 Retire Longhorn
-9. 🔲 Receive the 285H, assemble, join to cluster
-10. 🔲 Write the follow-up post
+3. ✅ ConnectX-3 cards installed in intel9 and xeon2zfs
+4. ✅ InfiniBand fabric UP (40 Gbps FDR operational)
+5. ✅ IPoIB configured, K8s hitting storage over IB
+6. 🔲 Finalize xeon2socket → xeon2zfs rename
+7. 🔲 Retire Longhorn (validation in progress)
+8. 🔲 Receive the 285H, assemble, join to cluster
+9. 🔲 Write the follow-up post
 
-I'll write the next one when it's all running. Whether or not the InfiniBand fabric humbles me on the way is, statistically speaking, the only real question. 🤞
+The InfiniBand fabric works. The storage is fast. The monitoring stack is humming. The cluster responds like it's running on bare metal, because it basically is.
+
+I'll write the next one when the 285H lands and the build is complete. Whether or not the Arrow Lake iGPU lives up to the hype is, statistically speaking, the only real question left. 🤞
 
 Until then — if you've been thinking about your own setup, the math, the trade-offs, the *why* of any of it — I hope this was useful. The hardware is cheap. The software is free. What you're really paying for is the right to keep your own keys.
 
