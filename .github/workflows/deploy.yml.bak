@@ -1,0 +1,44 @@
+name: Deploy Blog
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: [self-hosted, homelab]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Build container image (Hugo + nginx)
+        run: |
+          sudo /usr/local/bin/nerdctl --namespace k8s.io build --no-cache \
+            -t blog-debene-dev:latest \
+            -t blog-debene-dev:${{ github.sha }} .
+
+      - name: Deploy
+        env:
+          KUBECONFIG: /home/runner/.kube/config
+        run: |
+          kubectl -n blog rollout restart deployment/blog
+          kubectl -n blog rollout status deployment/blog --timeout=120s
+
+      - name: Purge Cloudflare cache
+        run: |
+          curl -sf -X POST \
+            "https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/purge_cache" \
+            -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            --data '{"purge_everything":true}'
+          echo "✅ Cache purged"
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "### Deploy ${{ job.status }} 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** https://debene.dev" >> $GITHUB_STEP_SUMMARY
