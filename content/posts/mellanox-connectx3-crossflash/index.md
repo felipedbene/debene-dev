@@ -490,6 +490,11 @@ Set it:
 echo datagram > /sys/class/net/ib0/mode
 ```
 
+
+![InfiniBand setup in the rack: ConnectX-3 Pro cards, QSFP cables, and QDR/FDR switch. Blue cables, green LEDs, 40 Gbps of bandwidth.](images/infiniband-setup.jpg)
+
+*The final product: ConnectX-3 Pro cards, QSFP cables, and an unmanaged QDR/FDR switch delivering 40 Gbps. Blue cables, green LEDs, Saturday night well spent.*
+
 ## The Wrap
 
 So, to summarize:
