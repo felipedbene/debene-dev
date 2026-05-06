@@ -25,15 +25,23 @@ jobs:
               -u fdebene \
               --password-stdin
 
-      - name: Build and push multi-arch image
+      - name: Build multi-arch image
         run: |
           sudo /usr/local/bin/nerdctl --namespace k8s.io build \
             --platform linux/amd64,linux/arm64 \
             --no-cache \
             -t fdebene/blog-debene-dev:latest \
             -t fdebene/blog-debene-dev:${{ github.sha }} \
-            --push \
             .
+
+      - name: Push images to Docker Hub
+        run: |
+          sudo /usr/local/bin/nerdctl --namespace k8s.io push \
+            --all-platforms \
+            fdebene/blog-debene-dev:latest
+          sudo /usr/local/bin/nerdctl --namespace k8s.io push \
+            --all-platforms \
+            fdebene/blog-debene-dev:${{ github.sha }}
 
       - name: Update deployment image
         env:
@@ -59,4 +67,5 @@ jobs:
           echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Image:** fdebene/blog-debene-dev:${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "**Platforms:** linux/amd64, linux/arm64" >> $GITHUB_STEP_SUMMARY
+          echo "**Docker Hub:** https://hub.docker.com/r/fdebene/blog-debene-dev" >> $GITHUB_STEP_SUMMARY
           echo "**URL:** https://debene.dev" >> $GITHUB_STEP_SUMMARY
