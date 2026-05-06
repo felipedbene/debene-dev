@@ -18,21 +18,30 @@ jobs:
           fetch-depth: 0
           path: debene-dev
 
-      - name: Build multi-arch container image (Hugo + nginx)
+      - name: Login to Docker Hub
+        run: |
+          echo "${{ secrets.DOCKER_HUB_TOKEN }}" | \
+            sudo /usr/local/bin/nerdctl --namespace k8s.io login \
+              -u fdebene \
+              --password-stdin
+
+      - name: Build and push multi-arch image
         run: |
           sudo /usr/local/bin/nerdctl --namespace k8s.io build \
             --platform linux/amd64,linux/arm64 \
             --no-cache \
-            -t blog-debene-dev:latest \
-            -t blog-debene-dev:${{ github.sha }} \
+            -t fdebene/blog-debene-dev:latest \
+            -t fdebene/blog-debene-dev:${{ github.sha }} \
+            --push \
             .
 
-      - name: Deploy
+      - name: Update deployment image
         env:
           KUBECONFIG: /home/runner/.kube/config
         run: |
-          kubectl -n blog rollout restart deployment/blog
-          kubectl -n blog rollout status deployment/blog --timeout=120s
+          kubectl set image deployment/blog -n blog \
+            blog=fdebene/blog-debene-dev:${{ github.sha }}
+          kubectl rollout status deployment/blog -n blog --timeout=120s
 
       - name: Purge Cloudflare cache
         run: |
@@ -48,5 +57,6 @@ jobs:
         run: |
           echo "### Deploy ${{ job.status }} 🚀" >> $GITHUB_STEP_SUMMARY
           echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** fdebene/blog-debene-dev:${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "**Platforms:** linux/amd64, linux/arm64" >> $GITHUB_STEP_SUMMARY
           echo "**URL:** https://debene.dev" >> $GITHUB_STEP_SUMMARY
