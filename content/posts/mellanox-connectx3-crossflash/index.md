@@ -7,15 +7,13 @@ tags: ["infiniband", "mellanox", "connectx-3", "networking", "homelab", "firmwar
 categories: ["Infrastructure", "Homelab", "Networking"]
 author: "Felipe De Bene"
 description: "OEM firmware locked your ConnectX card to Ethernet-only? Here's how to cross-flash it to VPI mode, survive the GUID apocalypse, and get 40 Gbps InfiniBand running in your homelab."
+cover:
+    image: "images/infiniband-setup.jpg"
+    alt: "InfiniBand setup with QSFP cables and ConnectX-3 cards"
+    caption: "40 Gbps InfiniBand FDR - two ConnectX-3 Pro cards cross-flashed to VPI mode"
 ShowToc: true
 TocOpen: true
 ---
-
-Most networking horror stories start with "I bought the wrong cable." Mine started with "I bought the right cable, but the firmware disagreed."
-
-This is the story of how I spent a Saturday night convincing two $20 eBay ConnectX-3 Pro cards that they were, in fact, InfiniBand-capable hardware — despite what their OEM firmware insisted.
-
-## The Mission
 
 I needed 40 Gbps between two machines:
 - **intel9:** Ubuntu 24.04, running K8s + misc services
