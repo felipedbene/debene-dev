@@ -2,6 +2,8 @@
 
 Personal blog running on [Hugo](https://gohugo.io/) with the [PaperMod](https://github.com/adityatelange/hugo-PaperMod) theme. Self-hosted on a Kubernetes homelab, served via Cloudflare Tunnel.
 
+**✨ Multi-arch container images:** Builds for `linux/amd64` and `linux/arm64` — runs on any node in the cluster!
+
 ## Stack
 
 ```
@@ -10,8 +12,9 @@ Internet → Cloudflare Tunnel (QUIC) → K8s Pod (cloudflared) → nginx (stati
 
 - **Generator**: Hugo 0.156.0
 - **Theme**: PaperMod
-- **Container**: nginx:alpine serving pre-built static files
-- **Hosting**: Kubernetes (kubeadm, 4-node homelab cluster)
+- **Container**: nginx:alpine serving pre-built static files (multi-arch: AMD64 + ARM64)
+- **Registry**: [Docker Hub](https://hub.docker.com/r/fdebene/blog-debene-dev)
+- **Hosting**: Kubernetes (kubeadm, 4-node homelab cluster: x86_64 + ARM64 nodes)
 - **CDN/Tunnel**: Cloudflare Tunnel (Zero Trust)
 - **Domain**: [debene.dev](https://debene.dev)
 
@@ -34,17 +37,24 @@ hugo --minify
 
 ## Deploy
 
+**Automated via GitHub Actions:**
+- Pushes to `main` trigger multi-arch build (AMD64 + ARM64)
+- Images published to Docker Hub: `fdebene/blog-debene-dev:latest`
+- K8s deployment updated automatically via self-hosted runner
+- Cloudflare cache purged on successful deploy
+
+**Manual build:**
+
 ```bash
-# Build container image (linux/amd64)
-docker build --platform linux/amd64 -t blog-debene-dev:latest -f Dockerfile.simple .
+# Build multi-arch image (requires buildkit/nerdctl)
+nerdctl build --platform linux/amd64,linux/arm64 -t fdebene/blog-debene-dev:latest -f Dockerfile.simple .
 
-# Export and import to K8s nodes
-docker save blog-debene-dev:latest | gzip > /tmp/blog-image.tar.gz
-scp /tmp/blog-image.tar.gz <node>:/tmp/
-ssh <node> "gunzip -c /tmp/blog-image.tar.gz | sudo ctr -n k8s.io images import -"
+# Push to Docker Hub
+nerdctl push --all-platforms fdebene/blog-debene-dev:latest
 
-# Apply K8s manifests
-kubectl apply -f k8s/deployment.yaml
+# Update K8s deployment
+kubectl set image deployment/blog blog=fdebene/blog-debene-dev:latest -n blog
+kubectl rollout status deployment/blog -n blog
 ```
 
 ## Writing
@@ -53,4 +63,4 @@ New posts go in `content/posts/<slug>/index.md` with images in an `images/` subd
 
 ## About
 
-Written from a basement in Chicago where an IBM POWER8 server runs Gentoo, AIX runs in KVM, and a Kubernetes cluster ties it all together.
+Written from a basement in Chicago where an IBM POWER8 server runs Gentoo, AIX runs in KVM, and a Kubernetes cluster ties it all together — now with ARM64 nodes joined by InfiniBand!
