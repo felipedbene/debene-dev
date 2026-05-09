@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: [self-hosted, homelab]
+    runs-on: self-hosted
     defaults:
       run:
         working-directory: debene-dev
