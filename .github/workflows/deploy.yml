@@ -18,66 +18,34 @@ jobs:
           fetch-depth: 0
           path: debene-dev
 
-      - name: Install kubectl
-        run: |
-          if ! command -v kubectl &> /dev/null; then
-            echo "📦 Installing kubectl..."
-            curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-            sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
-            rm kubectl
-            echo "✅ kubectl installed"
-          else
-            echo "✅ kubectl already installed"
-          fi
-          kubectl version --client
-        working-directory: .
-
-      - name: Setup kubeconfig
-        run: |
-          mkdir -p /home/runner/.kube
-          
-          if [ -f /kubeconfig/config ]; then
-            echo "✅ Using mounted kubeconfig"
-            cp /kubeconfig/config /home/runner/.kube/config
-          elif [ -f /root/.kube/config ]; then
-            echo "✅ Copying from /root/.kube/config"
-            sudo cp /root/.kube/config /home/runner/.kube/config
-            sudo chown runner:runner /home/runner/.kube/config
-          fi
-          
-          chmod 600 /home/runner/.kube/config 2>/dev/null || true
-          
-          kubectl get nodes || echo "⚠️  kubectl not working yet"
-        working-directory: .
-
-      - name: Setup Docker Buildx
-        run: |
-          # Setup buildx for multi-arch
-          docker buildx create --use --name multiarch --driver docker-container || \
-          docker buildx use multiarch || \
-          echo "✅ Buildx already configured"
-          
-          docker buildx inspect --bootstrap
-        working-directory: .
-
       - name: Login to Docker Hub
         run: |
           echo "${{ secrets.DOCKER_HUB_TOKEN }}" | \
-            docker login -u fdebene --password-stdin
+            sudo /usr/local/bin/nerdctl --namespace k8s.io login \
+              -u fdebene \
+              --password-stdin
 
-      - name: Build and push multi-arch image
+      - name: Build multi-arch image
         run: |
-          docker buildx build \
+          sudo /usr/local/bin/nerdctl --namespace k8s.io build \
             --platform linux/amd64,linux/arm64 \
-            --push \
             --no-cache \
             -t fdebene/blog-debene-dev:latest \
             -t fdebene/blog-debene-dev:${{ github.sha }} \
             .
-          
-          echo "✅ Images built and pushed"
+
+      - name: Push images to Docker Hub
+        run: |
+          sudo /usr/local/bin/nerdctl --namespace k8s.io push \
+            --all-platforms \
+            fdebene/blog-debene-dev:latest
+          sudo /usr/local/bin/nerdctl --namespace k8s.io push \
+            --all-platforms \
+            fdebene/blog-debene-dev:${{ github.sha }}
 
       - name: Update deployment image
+        env:
+          KUBECONFIG: /home/runner/.kube/config
         run: |
           kubectl set image deployment/blog -n blog \
             blog=fdebene/blog-debene-dev:${{ github.sha }}
