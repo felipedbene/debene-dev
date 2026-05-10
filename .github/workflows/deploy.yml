@@ -18,38 +18,56 @@ jobs:
           fetch-depth: 0
           path: debene-dev
 
-      - name: Login to Docker Hub
+      - name: Install Hugo
         run: |
-          echo "${{ secrets.DOCKER_HUB_TOKEN }}" | \
-            sudo /usr/local/bin/nerdctl --namespace k8s.io login \
-              -u fdebene \
-              --password-stdin
+          if ! command -v hugo &> /dev/null; then
+            echo "📦 Installing Hugo..."
+            HUGO_VERSION=0.139.3
+            wget -q https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.tar.gz
+            sudo tar -xzf hugo_extended_${HUGO_VERSION}_linux-amd64.tar.gz -C /usr/local/bin/ hugo
+            rm hugo_extended_${HUGO_VERSION}_linux-amd64.tar.gz
+            echo "✅ Hugo installed"
+          else
+            echo "✅ Hugo already installed"
+          fi
+          hugo version
+        working-directory: .
 
-      - name: Build multi-arch image
+      - name: Build site with Hugo
         run: |
-          sudo /usr/local/bin/nerdctl --namespace k8s.io build \
-            --platform linux/amd64,linux/arm64 \
-            --no-cache \
-            -t fdebene/blog-debene-dev:latest \
-            -t fdebene/blog-debene-dev:${{ github.sha }} \
-            .
+          echo "🏗️ Building site..."
+          hugo --minify
+          echo "✅ Site built to public/"
+          ls -la public/ | head -10
 
-      - name: Push images to Docker Hub
+      - name: Deploy to NFS
         run: |
-          sudo /usr/local/bin/nerdctl --namespace k8s.io push \
-            --all-platforms \
-            fdebene/blog-debene-dev:latest
-          sudo /usr/local/bin/nerdctl --namespace k8s.io push \
-            --all-platforms \
-            fdebene/blog-debene-dev:${{ github.sha }}
-
-      - name: Update deployment image
-        env:
-          KUBECONFIG: /home/runner/.kube/config
-        run: |
-          kubectl set image deployment/blog -n blog \
-            blog=fdebene/blog-debene-dev:${{ github.sha }}
-          kubectl rollout status deployment/blog -n blog --timeout=120s
+          echo "📦 Mounting NFS if needed..."
+          
+          # Ensure /tank/media is mounted
+          if ! mountpoint -q /tank/media 2>/dev/null; then
+            sudo mkdir -p /tank/media
+            sudo mount -t nfs -o proto=rdma,port=20049 172.16.0.20:/mnt/tank/media /tank/media || \
+              sudo mount -t nfs 10.0.10.101:/mnt/tank/media /tank/media
+            echo "✅ Mounted /tank/media"
+          else
+            echo "✅ /tank/media already mounted"
+          fi
+          
+          echo ""
+          echo "🚀 Deploying to /tank/media/blog/..."
+          
+          # Clear old content
+          sudo rm -rf /tank/media/blog/*
+          
+          # Copy new content
+          sudo cp -r public/* /tank/media/blog/
+          sudo chmod -R 755 /tank/media/blog/
+          
+          echo "✅ Deploy complete!"
+          echo ""
+          echo "📊 Files deployed:"
+          ls -la /tank/media/blog/ | head -10
 
       - name: Purge Cloudflare cache
         run: |
@@ -65,7 +83,6 @@ jobs:
         run: |
           echo "### Deploy ${{ job.status }} 🚀" >> $GITHUB_STEP_SUMMARY
           echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Image:** fdebene/blog-debene-dev:${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Platforms:** linux/amd64, linux/arm64" >> $GITHUB_STEP_SUMMARY
-          echo "**Docker Hub:** https://hub.docker.com/r/fdebene/blog-debene-dev" >> $GITHUB_STEP_SUMMARY
+          echo "**Method:** Hugo static site + NFS + Nginx" >> $GITHUB_STEP_SUMMARY
+          echo "**Location:** /tank/media/blog/" >> $GITHUB_STEP_SUMMARY
           echo "**URL:** https://debene.dev" >> $GITHUB_STEP_SUMMARY
