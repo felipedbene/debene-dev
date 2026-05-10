@@ -209,7 +209,7 @@ container: webhook-all-in-one (Alpine + Hugo + webhook binary)
 
 **Kubernetes cluster:**
 - **Control plane:** zima (10.0.10.100)
-- **Workers:** intel5, intel9, orion, ultra2, xeon2socket
+- **Workers:** intel5, intel9, orion, ultra2
 - **CNI:** Calico (VXLAN)
 - **Storage:** Longhorn (replicated) + NFS (media)
 - **Load Balancer:** MetalLB
