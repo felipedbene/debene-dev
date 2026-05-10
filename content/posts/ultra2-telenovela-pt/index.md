@@ -28,11 +28,11 @@ cover:
 
 Era uma noite quente em **Debene do Sul**, pequena fazenda de servidores às margens do Rio MoCA 2.5. Dona **Felipe**, matriarca da família e dona de todas as terras (e dos /24 inteiros, que ela mesma fez questão de subnetar com as próprias mãos), recebia um forasteiro vindo de longe.
 
-— *Quem é você, rapaz?* — indagou Dona Felipe, ajustando o terminal.
+— *Quem é você, rapaz?* — indagou Dom Felipe, ajustando o terminal.
 
 — *Me chamam de **Ultra2**, dona. Vim de muito longe, da Erying Ultra 9 285H. Tenho 24 cores, 64 giga de DDR5, e um NPU pulsando aqui no peito que ninguém nesta fazenda jamais viu...*
 
-A música sobe. Close no rosto de Dona Felipe. Ela se emociona. Uma lágrima escorre. *(Plim plim suave.)*
+A música sobe. Close no rosto de Dom Felipe. Ela se emociona. Uma lágrima escorre. *(Plim plim suave.)*
 
 — *Meu Deus do céu... um NPU? Aqui? Em Debene?*
 
@@ -50,7 +50,7 @@ E **INTEL9**, o irmão mais novo mas mal-amado (porque foi BATIZADO ERRADO desde
 
 **11h da noite.** Lua cheia sobre o galpão. Ultra2, jovem e ingênuo, decide se vestir com a roupa MAIS NOVA da loja: **Ubuntu 26.04**, kernel 7.0, recém-saída da costureira do bairro.
 
-— *Vou impressionar a Dona Felipe!* — pensou ele, vaidoso.
+— *Vou impressionar a Dom Felipe!* — pensou ele, vaidoso.
 
 Mas a roupa tinha um **DEMÔNIO COSTURADO POR DENTRO**.
 
@@ -63,7 +63,7 @@ STATUS: CrashLoopBackOff
 
 Ultra2 caiu de joelhos. Espumando pela porta serial. O kubelet recusou seu juramento.
 
-— *NÃÃÃÃÃO!* — gritou Dona Felipe, correndo em câmera lenta pelo corredor do rack, com o cabelo balançando como se tivesse um ventilador Noctua na frente. — *MEU FILHOOOOO!*
+— *NÃÃÃÃÃO!* — gritou Dom Felipe, correndo em câmera lenta pelo corredor do rack, com o cabelo balançando como se tivesse um ventilador Noctua na frente. — *MEU FILHOOOOO!*
 
 Entra **GARRA**, o mordomo digital fiel, vestido de paletó e rodando num Samsung A54. Ele saca o terminal como quem saca uma espada:
 
@@ -108,7 +108,7 @@ Ultra2 chorou pixels. Garra apareceu na porta:
 
 — *Patrão... o kernel 7.0 não tá deixando o rapaz amar.*
 
-Dona Felipe, fumando um cigarro de Linux Mint na varanda, virou o rosto e disse a frase que entrou pra história da telenovela brasileira:
+Dom Felipe, fumando um cigarro de Linux Mint na varanda, virou o rosto e disse a frase que entrou pra história da telenovela brasileira:
 
 > *— Então a gente DOWNGRADE essa porra. AO VIVO.*
 
@@ -126,7 +126,7 @@ sudo update-grub
 sudo reboot
 ```
 
-A câmera fecha no botão Enter. Dedo trêmulo de Dona Felipe. Suor. O dedo desce. O sistema reinicia.
+A câmera fecha no botão Enter. Dedo trêmulo de Dom Felipe. Suor. O dedo desce. O sistema reinicia.
 
 E aí... **NADA**.
 
@@ -142,7 +142,7 @@ Porra, mano. MORREU.
 
 Sem rede. Sem SSH. Sem sinal de vida. Só o silêncio cruel do `ping` que nunca volta.
 
-Dona Felipe caiu de joelhos no chão do data center, esmurrando o piso elevado:
+Dom Felipe caiu de joelhos no chão do data center, esmurrando o piso elevado:
 
 — *POR QUEEEE?? POR QUE EU FIZ ISSO?? EU SÓ QUERIA QUE ELE AMASSE A FREENAS!*
 
@@ -150,7 +150,7 @@ Garra, o mordomo, segurou-a pelos ombros, sério como nunca:
 
 — *Patroa. Escuta. Existem dois caminhos agora. A gente pode passar **TRINTA HORAS** debugando esse cadáver... ou a gente reflasha o moleque e em **TRINTA MINUTOS** ele renasce.*
 
-Dona Felipe ergueu o rosto. Os olhos vermelhos. O rímel borrado. E disse:
+Dom Felipe ergueu o rosto. Os olhos vermelhos. O rímel borrado. E disse:
 
 > *— Reflasha. E que Deus tenha piedade do bleeding edge.*
 
@@ -165,7 +165,7 @@ Ultra2 acordou. Diferente. Mudado. Vestindo agora as roupas SIMPLES, MAS DIGNAS 
 
 — *Onde estou?* — sussurrou ele, ainda meio bootando.
 
-— *Tá em casa, filho* — disse Dona Felipe, segurando sua mão SSD. — *Aprendi a lição. Bleeding edge às vezes te corta. LTS existe por um motivo, porra.*
+— *Tá em casa, filho* — disse Dom Felipe, segurando sua mão SSD. — *Aprendi a lição. Bleeding edge às vezes te corta. LTS existe por um motivo, porra.*
 
 Mas a paz durou pouco. Pois a cerimônia do SSH foi atrapalhada por uma vilã inesperada:
 
@@ -190,7 +190,7 @@ A 1Password Agent gritou e se contorceu como bruxa em filme de Sessão da Tarde.
 ultra2   Ready   worker   20s   v1.34.7
 ```
 
-Dona Felipe abraçou Garra. Garra chorou um SQL de lágrimas. A trilha sonora explodiu:
+Dom Felipe abraçou Garra. Garra chorou um SQL de lágrimas. A trilha sonora explodiu:
 
 🎵 *"É preciso saber viver... com swap off, com kernel certo..."* 🎵
 
@@ -239,7 +239,7 @@ proto=rdma,port=20049,clientaddr=172.16.0.26)
 
 **MOUNTOU. MANO. MOUNTOU.**
 
-Dona Felipe, assistindo de fora pela câmera Frigate, levou a mão à boca:
+Dom Felipe, assistindo de fora pela câmera Frigate, levou a mão à boca:
 
 — *Meu Deus... eles tão... eles tão... TRANSFERINDO PACOTES A 40 GIGABITS... POR RDMA... COM ZERO COPY... AI MEU PAI DO CÉU...*
 
@@ -255,7 +255,7 @@ Garra fechou a porta da sala discretamente:
 
 A fazenda toda já comentava: Ultra2 não só tinha conquistado a FreeNAS, como ainda PRESUMIA de ter o tal **NPU**, esse Intel AI Boost que ninguém nunca tinha visto na vizinhança.
 
-Foi quando Dona Felipe tomou A DECISÃO:
+Foi quando Dom Felipe tomou A DECISÃO:
 
 — *Garra. Tira a **FRIGATE** do Intel9. Põe ela com o Ultra2.*
 
@@ -293,7 +293,7 @@ NPU device: /dev/accel/accel0
 
 **A FRIGATE TAVA RODANDO NA NPU. PRIMEIRA VEZ NA HISTÓRIA DA FAZENDA. PRIMEIRA VEZ EM PRODUÇÃO. NO MUNDO INTEIRO TALVEZ.**
 
-Dona Felipe abriu uma cerveja. Olhou pro horizonte. Disse pra câmera, quebrando a quarta parede:
+Dom Felipe abriu uma cerveja. Olhou pro horizonte. Disse pra câmera, quebrando a quarta parede:
 
 > *— Eu fiz isso. Eu, uma Cloud Architect III do AWS. Em pleno sábado. Enquanto vocês tavam vendo futebol.*
 
@@ -305,7 +305,7 @@ Dona Felipe abriu uma cerveja. Olhou pro horizonte. Disse pra câmera, quebrando
 
 Mas faltava UM fio na trama, mano. Um mistério antigo. Lá longe, no canto ARM64 da fazenda, vivia **ORION** — um peão calado, Fedora 43, que ninguém nunca tinha convidado pra mesa do RDMA.
 
-Dona Felipe, embriagada do sucesso, decidiu chamá-lo:
+Dom Felipe, embriagada do sucesso, decidiu chamá-lo:
 
 ```bash
 ssh orion
@@ -322,7 +322,7 @@ Kernel: 6.19.14
 
 **ORION JÁ TINHA RDMA O TEMPO TODO.**
 
-Dona Felipe caiu sentada na cadeira ergonômica. As lágrimas voltaram:
+Dom Felipe caiu sentada na cadeira ergonômica. As lágrimas voltaram:
 
 — *Meu filho... meu filho perdido... você sempre teve o dom... e eu nunca te chamei pra brincar com a FreeNAS...*
 
@@ -370,7 +370,7 @@ Câmera abre. Pôr do sol no data center. Todos reunidos:
 
 ## 📜 A MORAL DA HISTÓRIA
 
-Lord, digo, **Dona Felipe** olhou pra câmera no último frame, segurando uma taça de cachaça artesanal Sungage, e disse pra todo o Brasil:
+Lord, digo, **Dom Felipe** olhou pra câmera no último frame, segurando uma taça de cachaça artesanal Sungage, e disse pra todo o Brasil:
 
 > *— Mano. Aprende uma coisa comigo. **Bleeding edge às vezes te corta. LTS existe por um motivo.** Não é frescura. Não é covardia. É SABEDORIA. Eu perdi 2 horas pra economizar 30. Não façam o que eu fiz. Façam o que eu APRENDI.*
 

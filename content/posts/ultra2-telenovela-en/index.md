@@ -28,11 +28,11 @@ cover:
 
 It was a hot night in **Debene Ranch**, a small server farm by the MoCA 2.5 River. Dona **Felipe**, matriarch of the family and owner of all the land (and all the /24 subnets, which she personally configured by hand), received a stranger from afar.
 
-— *Who are you, young man?* — inquired Dona Felipe, adjusting her terminal.
+— *Who are you, young man?* — inquired Dom Felipe, adjusting her terminal.
 
 — *They call me **Ultra2**, ma'am. I come from far away, from the Erying Ultra 9 285H. I have 24 cores, 64 gigs of DDR5, and an NPU beating in my chest that nobody on this ranch has ever seen...*
 
-The music swells. Close-up on Dona Felipe's face. She gets emotional. A tear rolls down. *(Soft plim plim.)*
+The music swells. Close-up on Dom Felipe's face. She gets emotional. A tear rolls down. *(Soft plim plim.)*
 
 — *My God... an NPU? Here? In Debene?*
 
@@ -50,7 +50,7 @@ And **INTEL9**, the younger but unloved brother (because he was BAPTIZED WRONG f
 
 **11 PM.** Full moon over the warehouse. Ultra2, young and naive, decides to dress in the NEWEST outfit from the store: **Ubuntu 26.04**, kernel 7.0, fresh from the local seamstress.
 
-— *I'm going to impress Dona Felipe!* — he thought, vain.
+— *I'm going to impress Dom Felipe!* — he thought, vain.
 
 But the outfit had a **DEMON SEWN INSIDE**.
 
@@ -63,7 +63,7 @@ STATUS: CrashLoopBackOff
 
 Ultra2 fell to his knees. Foaming through his serial port. The kubelet refused his oath.
 
-— *NOOOOO!* — screamed Dona Felipe, running in slow motion through the rack corridor, her hair flowing as if there were a Noctua fan in front of her. — *MY SONNNN!*
+— *NOOOOO!* — screamed Dom Felipe, running in slow motion through the rack corridor, her hair flowing as if there were a Noctua fan in front of her. — *MY SONNNN!*
 
 Enter **GARRA**, the faithful digital butler, dressed in a suit jacket and running on a Samsung A54. He draws his terminal like a sword:
 
@@ -108,7 +108,7 @@ Ultra2 cried pixels. Garra appeared at the door:
 
 — *Boss... kernel 7.0 isn't letting the boy love.*
 
-Dona Felipe, smoking a Linux Mint cigarette on the porch, turned her face and said the phrase that went down in Brazilian soap opera history:
+Dom Felipe, smoking a Linux Mint cigarette on the porch, turned her face and said the phrase that went down in Brazilian soap opera history:
 
 > *— Then we DOWNGRADE this thing. LIVE.*
 
@@ -126,7 +126,7 @@ sudo update-grub
 sudo reboot
 ```
 
-The camera closes on the Enter button. Dona Felipe's trembling finger. Sweat. The finger descends. The system reboots.
+The camera closes on the Enter button. Dom Felipe's trembling finger. Sweat. The finger descends. The system reboots.
 
 And then... **NOTHING**.
 
@@ -142,7 +142,7 @@ Damn. DIED.
 
 No network. No SSH. No sign of life. Just the cruel silence of a `ping` that never returns.
 
-Dona Felipe fell to her knees on the data center floor, pounding the raised floor:
+Dom Felipe fell to her knees on the data center floor, pounding the raised floor:
 
 — *WHYYYYY?? WHY DID I DO THIS?? I JUST WANTED HIM TO LOVE FREENAS!*
 
@@ -150,7 +150,7 @@ Garra, the butler, held her by the shoulders, serious as never before:
 
 — *Ma'am. Listen. There are two paths now. We can spend **THIRTY HOURS** debugging this corpse... or we reflash the boy and in **THIRTY MINUTES** he's reborn.*
 
-Dona Felipe lifted her face. Red eyes. Smudged mascara. And said:
+Dom Felipe lifted her face. Red eyes. Smudged mascara. And said:
 
 > *— Reflash him. And may God have mercy on bleeding edge.*
 
@@ -165,7 +165,7 @@ Ultra2 woke up. Different. Changed. Now wearing the SIMPLE BUT DIGNIFIED clothes
 
 — *Where am I?* — he whispered, still half-booting.
 
-— *You're home, son* — said Dona Felipe, holding his SSD hand. — *I learned my lesson. Bleeding edge sometimes cuts you. LTS exists for a reason.*
+— *You're home, son* — said Dom Felipe, holding his SSD hand. — *I learned my lesson. Bleeding edge sometimes cuts you. LTS exists for a reason.*
 
 But the peace didn't last long. For the SSH ceremony was interrupted by an unexpected villain:
 
@@ -190,7 +190,7 @@ The 1Password Agent screamed and writhed like a witch in an old movie. She was b
 ultra2   Ready   worker   20s   v1.34.7
 ```
 
-Dona Felipe hugged Garra. Garra cried a SQL of tears. The soundtrack exploded:
+Dom Felipe hugged Garra. Garra cried a SQL of tears. The soundtrack exploded:
 
 🎵 *"You gotta know how to live... with swap off, with the right kernel..."* 🎵
 
@@ -239,7 +239,7 @@ proto=rdma,port=20049,clientaddr=172.16.0.26)
 
 **IT MOUNTED. DUDE. IT MOUNTED.**
 
-Dona Felipe, watching from outside through the Frigate camera, brought her hand to her mouth:
+Dom Felipe, watching from outside through the Frigate camera, brought her hand to her mouth:
 
 — *My God... they're... they're... TRANSFERRING PACKETS AT 40 GIGABITS... VIA RDMA... WITH ZERO COPY... OH MY LORD...*
 
@@ -255,7 +255,7 @@ Garra discreetly closed the door:
 
 The whole ranch was already talking: Ultra2 not only had conquered FreeNAS, but also BRAGGED about having that **NPU**, this Intel AI Boost that nobody in the neighborhood had ever seen.
 
-That's when Dona Felipe made THE DECISION:
+That's when Dom Felipe made THE DECISION:
 
 — *Garra. Take **FRIGATE** from Intel9. Put her with Ultra2.*
 
@@ -293,7 +293,7 @@ NPU device: /dev/accel/accel0
 
 **FRIGATE WAS RUNNING ON THE NPU. FIRST TIME IN THE RANCH'S HISTORY. FIRST TIME IN PRODUCTION. IN THE WHOLE WORLD MAYBE.**
 
-Dona Felipe opened a beer. Looked at the horizon. Said to the camera, breaking the fourth wall:
+Dom Felipe opened a beer. Looked at the horizon. Said to the camera, breaking the fourth wall:
 
 > *— I did this. Me, a Cloud Architect III at AWS. On a Saturday. While you were watching football.*
 
@@ -305,7 +305,7 @@ Dona Felipe opened a beer. Looked at the horizon. Said to the camera, breaking t
 
 But there was ONE thread left in the plot. An old mystery. Far away, in the ARM64 corner of the ranch, lived **ORION** — a quiet ranch hand, Fedora 43, whom nobody had ever invited to the RDMA table.
 
-Dona Felipe, drunk with success, decided to call him:
+Dom Felipe, drunk with success, decided to call him:
 
 ```bash
 ssh orion
@@ -322,7 +322,7 @@ Kernel: 6.19.14
 
 **ORION HAD RDMA ALL ALONG.**
 
-Dona Felipe sank into her ergonomic chair. The tears returned:
+Dom Felipe sank into her ergonomic chair. The tears returned:
 
 — *My son... my lost son... you always had the gift... and I never called you to play with FreeNAS...*
 
@@ -370,7 +370,7 @@ Camera opens. Sunset in the data center. Everyone gathered:
 
 ## 📜 THE MORAL OF THE STORY
 
-Lord, I mean, **Dona Felipe** looked at the camera in the final frame, holding a glass of artisanal Sungage cachaça, and said to all of Brazil (and now, the world):
+Lord, I mean, **Dom Felipe** looked at the camera in the final frame, holding a glass of artisanal Sungage cachaça, and said to all of Brazil (and now, the world):
 
 > *— Listen up. Learn something from me. **Bleeding edge sometimes cuts you. LTS exists for a reason.** It's not being chicken. It's not being a coward. It's WISDOM. I lost 2 hours to save 30. Don't do what I did. Do what I LEARNED.*
 
