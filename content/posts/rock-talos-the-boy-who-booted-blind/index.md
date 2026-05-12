@@ -6,6 +6,10 @@ author: "Felipe De Bene"
 description: "A short story about installing Talos Kubernetes on a Rock 5 ITX (RK3588) with no working display, an EDK2 UEFI flash from a running Armbian, and an HDMI cable that pretended to be a brick for half an afternoon."
 keywords: ["talos","kubernetes","rock-5-itx","rk3588","edk2","uefi","arm64","homelab","sbc","nfs"]
 tags: ["Kubernetes","Talos","ARM64","Homelab","UEFI","NFS"]
+cover:
+  image: "images/cover.png"
+  alt: "Rock 5 ITX board in a dimly lit server rack with dramatic side lighting"
+  caption: "The Forasteiro from ARM64 arrives at Debene Ranch"
 ShowToc: true
 TocOpen: false
 ---
@@ -61,6 +65,9 @@ sudo dd if=/tmp/rock-5-itx_UEFI_Release_v1.1.img of=/dev/mtdblock0 \
 SPI is slow. 118 kilobytes per second slow. The interfacing-linux blog had warned about it — *the speed of smell, about a minute*. Fifty-eight seconds in, the seven megabytes were on the chip. A `cmp -n 6915584` confirmed the bytes round-tripped. Reboot.
 
 And then nothing.
+
+![The SPI chip with ancient runes](images/spi-chip.png)
+*The bruxa in her cottage — a tiny glowing chip holding the keys to boot*
 
 ---
 
@@ -274,11 +281,17 @@ Late in the afternoon, Dom Felipe plugged in a different HDMI cable.
 
 EDK2 came on screen. Boot menu. The cute Tianocore logo. A list of bootable devices, an option to enter the setup, fan curves, everything that had been there the whole time.
 
+![EDK2 UEFI boot screen](images/edk2-boot.png)
+*The boy finally speaks — Tianocore UEFI boot menu on a vintage CRT aesthetic*
+
 The original cable — one of those generic HDMI things from a bag of cables that had been migrating between two desks for four years — had been bad. Not "obviously broken" bad. Pickier. The kind of bad where the link layer sort of works but the firmware framebuffer can't establish a stable mode. The display would have been showing things this entire time if a different cable had been plugged in five hours earlier.
 
 The Rock was never blind. It was being lied to.
 
 Garra, by then, had already updated the family tree to mention that *o moleque enxerga, sim, é só não acreditar em tudo que cabo HDMI da Amazon te promete*. Dom Felipe wrote it on a Post-it stuck to the rack: **CHECK THE CABLE FIRST**.
+
+![Two HDMI cables side by side](images/hdmi-cables.png)
+*One lied. One told the truth. The difference between a working display and 4 hours of debugging.*
 
 ---
 
@@ -297,6 +310,9 @@ NFS in the kernel. No reboot needed. A test pod mounted `/mnt/tank/k8s-dynamic` 
 A Helm install of `nfs-subdir-external-provisioner` with `pathPattern: 'rock-${.PVC.namespace}-${.PVC.name}'` made the namespace prefix `rock-` so debene's PVCs and rock-talos's PVCs never share a directory. A `PersistentVolumeClaim` for an nginx deployment came up Bound in five seconds. The PVC's backing directory appeared in TrueNAS — `rock-default-nginx-content-pvc-c33b31fd-...` — visible next to debene's `jellyfin-jellyfin-config-nfs-pvc-...` like siblings at a family reunion.
 
 A pod delete-and-recreate proved persistence: same HTML served from a different pod IP, because the bytes were never on the pod, they were on the TrueNAS, which had been waiting all afternoon.
+
+![TrueNAS family reunion](images/truenas-family.png)
+*The family at TrueNAS — old and new servers gathering around the glowing NFS mount point*
 
 ![rock-talos hello page](images/hello-rock-talos.png)
 *nginx serving persistent content from TrueNAS over VLAN 10 — screenplay by claudinha bagunceira*
