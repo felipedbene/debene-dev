@@ -1,6 +1,6 @@
 ---
 title: "🪨 ROCK-TALOS: The Boy Who Booted Blind"
-date: 2026-05-12T22:30:00-05:00
+date: 2026-05-12T10:00:00-05:00
 draft: false
 author: "Felipe De Bene"
 description: "A short story about installing Talos Kubernetes on a Rock 5 ITX (RK3588) with no working display, an EDK2 UEFI flash from a running Armbian, and an HDMI cable that pretended to be a brick for half an afternoon."
