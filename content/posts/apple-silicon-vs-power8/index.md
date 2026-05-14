@@ -280,19 +280,7 @@ Ten years ago, running a 7B parameter model on a laptop was science fiction. Tod
 
 ---
 
-## Appendix: Raw Benchmark Data
-
-### Text Inference (Qwen 2.5 7B Q4_K_M)
-
-| Metric | POWER8 S822 | Apple M2 Max | Speedup |
-|--------|------------|--------------|---------|
-| Prompt eval (t/s) | 18.50 | 630.78 | 34.1x |
-| Generation (t/s) | 6.81 | 58.17 | 8.5x |
-| Model load (ms) | 1360 | 66 | 20.6x |
-| Threads used | 80 (SMT4) | 12 (native) | - |
-| GPU | None | 38-core Metal | - |
-| Memory BW | 230 GB/s | 400+ GB/s | 1.7x |
-| Power (full load) | 400W | 60W | 6.6x |
+## Appendix: Additional Benchmark Data
 
 ### Vision Inference (LLaVA 7B / Qwen 2.5 VL 7B)
 
