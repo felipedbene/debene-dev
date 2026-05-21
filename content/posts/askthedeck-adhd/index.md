@@ -4,15 +4,22 @@ date: 2026-05-21T15:30:00-05:00
 draft: false
 tags: ["adhd", "ai", "claude", "product", "tarot", "cloudflare", "llm"]
 categories: ["Personal", "Product Development"]
+cover:
+  image: "images/graveyard.png"
+  alt: "Abandoned code repositories floating in cosmic space"
 ---
 
 My laptop has a `~/projects` folder. Most of it is a graveyard. Not because the ideas were bad — I'd still build some of them if I sat down today. They're dead because I get excited by a technical problem, work on it for two weekends, hit the part that stops being fun, and drift to the next thing. The codebase stays. The git log doesn't.
+
+![The ~/projects graveyard](images/graveyard.png)
 
 I'm 40, a Cloud Architect with ~18 years across IBM and AWS, and I have ADHD. Diagnosed late, lived with it longer. The pattern above isn't laziness — it's a specific shape of attention. Hyperfocus until the dopamine of novelty runs out, then gravitational pull toward whatever's next. Anyone with this wiring recognizes the feeling: the moment a project transitions from "fun problem" to "ten unsexy decisions in a row," part of your brain leaves the room.
 
 This is about a tarot reading app I built called [askthedeck](https://ask.debene.dev) — but really it's about the fact that I *finished* it. And what finishing looked like was using Claude not as a coding accelerator but as a brake.
 
 ## The boring middle
+
+![The moment projects stop being interesting](images/boring-middle.png)
 
 Every project has a moment where it stops being interesting. For askthedeck, that moment came when the LLM prompt worked and the basic flow was shippable. The reading text came out beautifully — moody, evocative, screenshot-worthy. I could've called it done.
 
@@ -30,6 +37,8 @@ Past me would've stopped here. Posted a screenshot on Twitter, wrote "v0.1 shipp
 I used Claude through this entire stretch, but not the way the AI demos sell it. I didn't ask it to generate the app. I didn't vibe-code my way through. The code is mine, the architecture is mine, the decisions are mine.
 
 What Claude did was narrower and, for me, more useful: it absorbed the impulse to expand.
+
+![ADHD as an expansion engine](images/expansion-engine.png)
 
 ADHD is, among other things, an expansion engine. Every five minutes my brain produces a new exciting tangent. *What if I added Italian and French? What if cookie identity merged across devices via magic link? What if there was a star rating? What if the modal pulsed gently with the moon phase?* Each would've been fun to build. Each would've added two days of work and pushed shipping further out. Each would've been a perfect off-ramp into the next project, leaving askthedeck 80% done forever.
 
@@ -56,6 +65,8 @@ The version of askthedeck that shipped is meaningfully different from the versio
 **Analytics are self-hosted in D1.** Reader IDs are SHA-256 hashed before insert, events are purged after 90 days, no third-party trackers. The privacy notice describes exactly what's collected, in three languages. I'd have shipped with Google Analytics and a vague "we use cookies" banner.
 
 ## What this isn't
+
+![Claude as counterweight, not replacement](images/claude-brake.png)
 
 It's not "AI ended my ADHD." I still have ADHD. Tomorrow I'll start another project, get bored, and want to abandon it. The pattern doesn't dissolve because I shipped one app.
 
