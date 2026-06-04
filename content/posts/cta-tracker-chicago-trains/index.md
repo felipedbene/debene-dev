@@ -14,7 +14,7 @@ cover:
 ![CTA Live Track Grid showing real-time positions of all Chicago trains](images/cta-tracker-screenshot.png)
 *103 trains moving through Chicago right now — Red Line bunching in the Loop, Blue Line stretching to O'Hare, Metra commuter rail fanning out to the suburbs*
 
-I moved to Chicago eight years ago and discovered two things immediately: this city is a train hub, and I fucking love trains.
+I moved to Chicago in 2018 and discovered two things immediately: this city is a train hub, and I fucking love trains.
 
 Not in a "trains are neat" way. In a "I will stand on the platform and watch the Red Line snake through the Loop until Sara texts me asking why I'm late" way. In a "I need to know where every train is, right now, all the time" way.
 
@@ -38,7 +38,7 @@ I wanted something that looked like a NORAD display. Real-time. All trains. No c
 
 I used Claude. Heavily. The architecture, the API integration, the Leaflet map logic, the WebSocket polling, the color-coding — I designed all of it. But Claude wrote probably 70% of the actual code.
 
-Here's why that worked: I knew exactly what I wanted. I've been using the CTA for 8 years. I know which stations are transfer points, which lines run express, which stations are elevated vs. underground. I know the *shape* of the system in my head. Claude doesn't know Chicago. But it knows Leaflet, it knows how to parse GTFS-RT feeds, it knows how to build real-time web apps.
+Here's why that worked: I knew exactly what I wanted. In 2022, I decided to live without a car — fresh from Mexico, thinking the CTA was all I needed. Four years later, I know which stations are transfer points, which lines run express, which stations are elevated vs. underground. I know the *shape* of the system in my head. Claude doesn't know Chicago. But it knows Leaflet, it knows how to parse GTFS-RT feeds, it knows how to build real-time web apps.
 
 I'd describe the feature: "I want trains to show as animated markers moving along the line paths, color-coded by route, with a tail effect to show direction." Claude would write the implementation. I'd test it, find the gaps (markers jumping when data updates, colors bleeding between lines, performance tanking when 100+ trains render), describe the problem, and Claude would iterate.
 
