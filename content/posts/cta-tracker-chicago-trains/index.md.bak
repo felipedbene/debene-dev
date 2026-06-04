@@ -14,7 +14,7 @@ cover:
 ![CTA Live Track Grid showing real-time positions of all Chicago trains](images/cta-tracker-screenshot.png)
 *103 trains moving through Chicago right now — Red Line bunching in the Loop, Blue Line stretching to O'Hare, Metra commuter rail fanning out to the suburbs*
 
-I moved to Chicago four years ago and discovered two things immediately: this city is a train hub, and I fucking love trains.
+I moved to Chicago eight years ago and discovered two things immediately: this city is a train hub, and I fucking love trains.
 
 Not in a "trains are neat" way. In a "I will stand on the platform and watch the Red Line snake through the Loop until Sara texts me asking why I'm late" way. In a "I need to know where every train is, right now, all the time" way.
 
@@ -38,7 +38,7 @@ I wanted something that looked like a NORAD display. Real-time. All trains. No c
 
 I used Claude. Heavily. The architecture, the API integration, the Leaflet map logic, the WebSocket polling, the color-coding — I designed all of it. But Claude wrote probably 70% of the actual code.
 
-Here's why that worked: I knew exactly what I wanted. I've been riding the CTA for four years — came from Mexico in 2022 thinking it was all I needed, no car. Now I know which stations are transfer points, which lines run express, which stations are elevated vs. underground. I know the *shape* of the system in my head. Claude doesn't know Chicago. But it knows Leaflet, it knows how to parse GTFS-RT feeds, it knows how to build real-time web apps.
+Here's why that worked: I knew exactly what I wanted. I've been using the CTA for 8 years. I know which stations are transfer points, which lines run express, which stations are elevated vs. underground. I know the *shape* of the system in my head. Claude doesn't know Chicago. But it knows Leaflet, it knows how to parse GTFS-RT feeds, it knows how to build real-time web apps.
 
 I'd describe the feature: "I want trains to show as animated markers moving along the line paths, color-coded by route, with a tail effect to show direction." Claude would write the implementation. I'd test it, find the gaps (markers jumping when data updates, colors bleeding between lines, performance tanking when 100+ trains render), describe the problem, and Claude would iterate.
 
@@ -86,7 +86,7 @@ The version of the tracker that shipped is different from the version I would've
 
 **Alerts are opt-in, local-only.** The "🔔 Enable alerts" button triggers browser push notifications when your home station train is approaching. But it's entirely client-side. The server never knows your station, your location, or your notification preferences. It's just JavaScript and the Push API.
 
-**All data is public.** The CTA API is public. The GTFS feed is public. The tracker is open-source (repo: [github.com/felipedbene/cta-track-grid](https://github.com/felipedbene/cta-track-grid)). If the CTA wanted to shut this down, they could. But why would they? I'm making their data more accessible.
+**All data is public.** The CTA API is public. The GTFS feed is public. The tracker is open-source (repo: [github.com/felipedbene/cta-tracker](https://github.com/felipedbene/cta-tracker)). If the CTA wanted to shut this down, they could. But why would they? I'm making their data more accessible.
 
 **Metra and South Shore are toggleable.** CTA is rapid transit (8 lines, frequent service). Metra is commuter rail (11 lines, suburban, less frequent). They serve different purposes. Showing both at once clutters the map. So there's a toggle. CTA defaults to ON. Metra defaults to OFF. You can turn them on if you care about regional rail.
 
@@ -100,27 +100,15 @@ It's not going to replace the official CTA app for most people. If you just want
 
 But if you want to see the *system* — all the trains, all the time, moving like blood through the city's veins — this is the tool I wanted and couldn't find. So I built it.
 
+## The technical post is also coming
+
+If you're here for the architecture — Cloudflare Workers + D1 for storage, GTFS-RT parsing, Leaflet for mapping, WebSocket-style polling without actual WebSockets, the replay time-travel logic, performance optimization for 100+ simultaneous animated markers — that's the next post.
+
+But I wanted to write this one first. Because the tracker exists because I love trains, and I love Chicago, and I needed to see both of them in a way that didn't exist yet.
+
 Worth building.
 
-## Update: now it runs in a terminal, because of course it does
-
-I said the next post would be the architecture deep-dive. This is not that post. This is the post where I admit a browser was apparently too much UI for me, so I forked the whole thing into a terminal app.
-
-[cta-tui](https://github.com/felipedbene/cta-tui) is the same NORAD board — except now it's literally green phosphor text in your terminal. No browser, no Worker proxy sitting in front of it (a native app has no CORS to dodge), just the CTA key in an env var and three feeds folded onto one screen. It's Rust + ratatui, and it ships as a single self-contained binary: TLS is rustls so there's no OpenSSL to link, and the station geometry is baked into the binary, so there are no runtime files. ~2.7 MB, runs anywhere.
-
-The centerpiece is an ASCII track map — every live train projected onto its line exactly where it sits between stations, inbound above the rail, outbound below. The Green Line draws both of its south branches stacked, Ashland/63rd and Cottage Grove, because doing it the lazy way bugged me. You can fuzzy-search any station on the system and zoom the map to a window around it, and the whole thing flips between a horizontal strip and a vertical line diagram depending on your terminal (I default to vertical — it reads better).
-
-![CTA TUI terminal interface showing Green Line trains and alerts](images/cta-tui-screenshot.png)
-*Green phosphor text, ASCII track map, live alerts — the NORAD board, but in your terminal*
-
-
-And because I am, again, that guy: it rings a bell and flashes the panel when a train is within six minutes of my home stop at Kedzie, fires a desktop notification when a train I'm tracking goes delayed, and has a key for live per-line service alerts.
-
-Grab a binary for macOS, Linux, or Windows, drop in your CTA key, and you've got a command center for the 'L' in a terminal tab. Code's on [GitHub](https://github.com/felipedbene/cta-tui). Built with Claude, mostly in one long sitting — which tracks.
-
-The architecture post is still coming. Probably.
-
-[tracker.debene.dev](https://tracker.debene.dev) · [repo](https://github.com/felipedbene/cta-track-grid)
+[tracker.debene.dev](https://tracker.debene.dev) · [repo](https://github.com/felipedbene/cta-tracker)
 
 ---
 

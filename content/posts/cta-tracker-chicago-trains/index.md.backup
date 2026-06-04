@@ -100,25 +100,13 @@ It's not going to replace the official CTA app for most people. If you just want
 
 But if you want to see the *system* — all the trains, all the time, moving like blood through the city's veins — this is the tool I wanted and couldn't find. So I built it.
 
+## The technical post is also coming
+
+If you're here for the architecture — Cloudflare Workers + D1 for storage, GTFS-RT parsing, Leaflet for mapping, WebSocket-style polling without actual WebSockets, the replay time-travel logic, performance optimization for 100+ simultaneous animated markers — that's the next post.
+
+But I wanted to write this one first. Because the tracker exists because I love trains, and I love Chicago, and I needed to see both of them in a way that didn't exist yet.
+
 Worth building.
-
-## Update: now it runs in a terminal, because of course it does
-
-I said the next post would be the architecture deep-dive. This is not that post. This is the post where I admit a browser was apparently too much UI for me, so I forked the whole thing into a terminal app.
-
-[cta-tui](https://github.com/felipedbene/cta-tui) is the same NORAD board — except now it's literally green phosphor text in your terminal. No browser, no Worker proxy sitting in front of it (a native app has no CORS to dodge), just the CTA key in an env var and three feeds folded onto one screen. It's Rust + ratatui, and it ships as a single self-contained binary: TLS is rustls so there's no OpenSSL to link, and the station geometry is baked into the binary, so there are no runtime files. ~2.7 MB, runs anywhere.
-
-The centerpiece is an ASCII track map — every live train projected onto its line exactly where it sits between stations, inbound above the rail, outbound below. The Green Line draws both of its south branches stacked, Ashland/63rd and Cottage Grove, because doing it the lazy way bugged me. You can fuzzy-search any station on the system and zoom the map to a window around it, and the whole thing flips between a horizontal strip and a vertical line diagram depending on your terminal (I default to vertical — it reads better).
-
-![CTA TUI terminal interface showing Green Line trains and alerts](images/cta-tui-screenshot.png)
-*Green phosphor text, ASCII track map, live alerts — the NORAD board, but in your terminal*
-
-
-And because I am, again, that guy: it rings a bell and flashes the panel when a train is within six minutes of my home stop at Kedzie, fires a desktop notification when a train I'm tracking goes delayed, and has a key for live per-line service alerts.
-
-Grab a binary for macOS, Linux, or Windows, drop in your CTA key, and you've got a command center for the 'L' in a terminal tab. Code's on [GitHub](https://github.com/felipedbene/cta-tui). Built with Claude, mostly in one long sitting — which tracks.
-
-The architecture post is still coming. Probably.
 
 [tracker.debene.dev](https://tracker.debene.dev) · [repo](https://github.com/felipedbene/cta-track-grid)
 
