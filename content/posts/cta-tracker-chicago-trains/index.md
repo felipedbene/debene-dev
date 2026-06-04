@@ -86,7 +86,7 @@ The version of the tracker that shipped is different from the version I would've
 
 **Alerts are opt-in, local-only.** The "🔔 Enable alerts" button triggers browser push notifications when your home station train is approaching. But it's entirely client-side. The server never knows your station, your location, or your notification preferences. It's just JavaScript and the Push API.
 
-**All data is public.** The CTA API is public. The GTFS feed is public. The tracker is open-source (repo: [github.com/felipedbene/cta-tracker](https://github.com/felipedbene/cta-tracker)). If the CTA wanted to shut this down, they could. But why would they? I'm making their data more accessible.
+**All data is public.** The CTA API is public. The GTFS feed is public. The tracker is open-source (repo: [github.com/felipedbene/cta-track-grid](https://github.com/felipedbene/cta-track-grid)). If the CTA wanted to shut this down, they could. But why would they? I'm making their data more accessible.
 
 **Metra and South Shore are toggleable.** CTA is rapid transit (8 lines, frequent service). Metra is commuter rail (11 lines, suburban, less frequent). They serve different purposes. Showing both at once clutters the map. So there's a toggle. CTA defaults to ON. Metra defaults to OFF. You can turn them on if you care about regional rail.
 
@@ -108,7 +108,7 @@ But I wanted to write this one first. Because the tracker exists because I love 
 
 Worth building.
 
-[tracker.debene.dev](https://tracker.debene.dev) · [repo](https://github.com/felipedbene/cta-tracker)
+[tracker.debene.dev](https://tracker.debene.dev) · [repo](https://github.com/felipedbene/cta-track-grid)
 
 ---
 
