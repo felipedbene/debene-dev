@@ -268,6 +268,11 @@ Source code is at [github.com/felipedbene/bbs](https://github.com/felipedbene/bb
 
 **7,000 lines of Go. One day. Zero CGO. 24 MB static image.**
 
+Built with Claude Code pair-programming every line — from the SSH handshake to the door PTY bridge. The AI didn't just autocomplete; it debugged, refactored, and suggested better patterns. When I got stuck on the phantom keystroke bug, it knew to check the terminal color query. When ZMODEM failed, it explained *why* and proposed SFTP as the pragmatic alternative.
+
+This wasn't "AI-assisted development." This was actual pair programming. I wrote the architecture, Claude Code wrote the implementation. I found the bugs, Claude Code explained the root causes. We shipped production code together.
+
+
 And it speaks the same language a Wildcat! 4.0 board did in 1994 — SSH instead of Hayes AT commands, but the same ANSI art, the same door games, the same message threading, the same download ratios.
 
 Sometimes the best projects are the ones that don't need to exist. They just need to be *fun*.
