@@ -1,7 +1,7 @@
 ---
 title: "I Built a 1990s BBS in 2026 (In One Day)"
 date: 2026-06-09
-draft: true
+draft: false
 tags: ["go", "ssh", "bbs", "nostalgia", "kubernetes"]
 ---
 
