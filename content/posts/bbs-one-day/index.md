@@ -61,6 +61,10 @@ I'm not going to pretend this was smooth. It wasn't. But it was *structured* —
 
 **3:45 PM** — Multi-user hub. Concurrent sessions, cross-user chat, paging (like IM but in 1994). I wrote tests for this part — race conditions are real when you have 10 people typing at once.
 
+![Who's Online screen showing active users](images/whos-online.png)
+*Real-time user tracking — node number, handle, level, current activity*
+
+
 **4:30 PM** — Sysop tools. User editor, bulletin editor, stats dashboard. Every BBS needs a sysop panel. I made mine accessible via `[S]ysop Menu` (hidden unless you're an admin).
 
 **4:55 PM** — Deployment. Dockerfile, Kubernetes manifests, multi-arch image build (amd64 + arm64). Push to GHCR, deploy to the cluster, expose via MetalLB. The board was live at `ssh://bbs.debene.dev:2323`.
@@ -191,6 +195,10 @@ I tested the final version in a Linux container with `strace` attached. Watching
 ## Try It
 
 The BBS is running at **ssh://bbs.debene.dev:2323** (or use the web terminal at **https://bbs.debene.dev**).
+
+![Live chat with join notifications](images/live-chat.png)
+*Multi-user chat — type a message, hit Enter, everyone sees it in real-time*
+
 
 Create an account, leave a message, try the Number Duel door game. It's gloriously retro.
 
