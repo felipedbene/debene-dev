@@ -180,6 +180,66 @@ I tested the final version in a Linux container with `strace` attached. Watching
 ![Number Duel door game in action](images/door-game.png)
 *Number Duel running in a real PTY — cooked mode, echoing input, responding to guesses*
 
+
+## Technical Decisions & Trade-offs
+
+Building a BBS in 2026 means making choices between authenticity and practicality. Here are the interesting ones:
+
+### File Transfers: ZMODEM vs SFTP
+
+**The problem:** Classic BBSes used ZMODEM for file uploads/downloads — a protocol that hijacks the terminal, sends binary data with error correction, and resumes the session after. It's deeply tied to serial ports and modem behavior.
+
+**What I tried:** ZMODEM over SSH. The `rzsz` package exists, and it *should* work. But:
+
+1. **SSH byte streams aren't serial ports.** ZMODEM expects predictable timing and flow control. SSH has variable latency, packet loss, and buffering.
+2. **Modern terminals don't speak ZMODEM natively.** iTerm2 does (with `--trigger` automation), but most terminals don't. You need external wrapper scripts.
+3. **The protocol handshake is fragile.** ZMODEM starts with a sequence of `0x18` bytes (`ZDLE ZPAD`). If any terminal escape sequence or UTF-8 character looks like that, the handshake breaks.
+
+I spent two hours debugging why `rz` would hang after printing `Receiving: filename`. The SSH stream was eating bytes. The terminal was interpreting escape sequences. ZMODEM was designed for 1200 baud modems, not modern networks.
+
+**What I chose:** SFTP.
+
+SSH already includes file transfer (`pkg/sftp` in Go). It's built into the protocol. No terminal hijacking, no binary data corruption, no timing issues. And bonus: you can use `sftp` or `scp` from the command line — no special client needed.
+
+**The trade-off:** Authenticity lost. A 1994 sysop would've used ZMODEM. But a 2026 user expects `scp user@bbs.debene.dev:/files/doom.zip .` to Just Work™.
+
+---
+
+### The Web Terminal: SSH in Your Browser
+
+**The challenge:** Not everyone has an SSH client installed. Windows users especially — PuTTY exists, but it's clunky. macOS/Linux users have `ssh`, but that's not universal.
+
+**The solution:** A web terminal that connects to the *actual live SSH server* running in the Kubernetes pod.
+
+Here's how it works:
+
+1. **User visits `https://bbs.debene.dev`** (web terminal UI)
+2. **xterm.js renders the terminal** (client-side, in JavaScript)
+3. **WebSocket connection** to the BBS server (same pod, different port)
+4. **Server bridges WebSocket ↔ SSH session** using `coder/websocket`
+5. **User gets a real SSH session** — same auth, same TUI, same state as if they'd used `ssh` from the command line
+
+**The cool part:** It's not a separate webapp mimicking the BBS. It's a *direct connection* to the SSH server. The same `bbsd` binary handles both:
+
+- Port 2323 → raw SSH (for `ssh` clients)
+- Port 8080 → WebSocket → SSH (for browsers)
+
+Both paths lead to the exact same Bubbletea TUI. No separate codebase, no state sync issues.
+
+**The technical bits:**
+
+- **xterm.js** renders the terminal (VT220 emulation, supports ANSI colors)
+- **WebSocket upgrade** on `/ws` endpoint (Go `net/http` → `coder/websocket`)
+- **PTY allocation** works the same (one pty per session, whether SSH or WebSocket)
+- **Authentication** works identically (username/password, same database)
+
+**The deployment reality:** The web terminal runs inside the Kubernetes pod. When you connect via browser, you're hitting a LoadBalancer IP (`10.0.100.X`) that routes to the pod. That pod is scheduled on one of my homelab nodes (`intel5`, `intel9`, `ultra2`, or `orion`). The pod might restart, move nodes, or scale — but the session state is in memory, so reconnecting starts fresh (just like SSH).
+
+**The limitation:** No clipboard integration (browser security), no file uploads via drag-drop (SFTP only), and if the pod restarts mid-session, you're disconnected. But for "I just want to try this BBS without installing anything," it works perfectly.
+
+**The code:** ~87 lines of HTML/JS (xterm.js + WebSocket client) and ~120 lines of Go (WebSocket → PTY bridge). That's it.
+
+
 ## What I Learned
 
 1. **Bubbletea is magical for TUI apps.** I built 33 different screens with consistent navigation, themes, and state management. The tea.Model pattern makes it feel like React for the terminal.
