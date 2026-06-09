@@ -1,0 +1,10 @@
+
+## Screenshots to add:
+
+After "The goal: **ssh to the board...1994.**":
+![Main menu with three-panel layout](images/main-menu.png)
+*The main menu — 18 commands across three panels, pure ANSI art*
+
+After the door bugs section, before "## What I Learned":
+![Number Duel door game in action](images/door-game.png)
+*Number Duel running in a real PTY — cooked mode, echoing input, responding to guesses*
