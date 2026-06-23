@@ -97,6 +97,9 @@ The current fleet:
 - **PowerMac G5** — the big-endian beast; the reason that OpenSSL build path exists.
 - **Clamshell** — incoming. It's on its way to me as I write this, and getting gopher-cta running on something that old and that gorgeous deserves its own post. Next time.
 
+![Safari can't render gopher, but nc works perfectly](images/safari-vs-nc.png)
+*Modern Safari chokes on gopher:// URLs, but a simple `printf '/atlas.txt\r\n' | nc gopher.debene.dev 70` fetches the geographic atlas in under a second. Sometimes the old ways are the better ways.*
+
 There's something fitting about all of it. A protocol from 1991, a city's trains in real time, dots for pixels, served and read on Apple hardware from the era when computers still came in colors. None of it should fit together. All of it does.
 
 ## Worth it
