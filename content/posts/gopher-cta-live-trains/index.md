@@ -103,10 +103,36 @@ There's something fitting about all of it. A protocol from 1991, a city's trains
 
 So that's gopher-cta: live Chicago 'L' trains, rendered as braille dots, served over a protocol older than the web, fenced politely from search crawlers, on a $26/year VPS. By any reasonable product metric it's pointless. By the only metric I care about on a weekend, it's perfect — it does one quiet, specific, beautiful thing, and it's mine, and it'll keep doing it without asking anyone for attention.
 
-If you've got a gopher client (or `lynx`, or even just `nc`), come watch the trains move:
+### How to watch
+
+If you've never used gopher before, here's where to start:
+
+**GUI clients (beautiful and modern):**
+- **[Lagrange](https://gmi.skyjake.fi/lagrange/)** — Gorgeous, fast, supports both Gopher and Gemini. Runs on everything from PowerPC Macs to modern Linux. This is the one I use on the iBook G4.
+
+**Terminal clients (fast and everywhere):**
+- **lynx** — `lynx gopher://gopher.debene.dev`
+- **curl** (yes, really) — `curl gopher://gopher.debene.dev/0/map.txt`
+
+**The raw way (no client needed):**
 
 ```bash
-gopher://gopher.debene.dev:70/
+# Root menu
+printf '\r\n' | nc gopher.debene.dev 70
+
+# Live braille map
+printf '/map.txt\r\n' | nc gopher.debene.dev 70
+
+# Watch trains move in real-time (30s refresh)
+watch -n 30 "printf '/map.txt\r\n' | nc gopher.debene.dev 70"
+
+# Red Line only
+printf '/red\r\n' | nc gopher.debene.dev 70
+
+# Specific train (run number changes!)
+printf '/train/906.txt\r\n' | nc gopher.debene.dev 70
 ```
+
+That last one — the watcher — is my favorite. Open a terminal, run it, and just leave it there. Every 30 seconds the map redraws itself with fresh train positions. No JavaScript. No websockets. No battery drain. Just dots, quietly updating, while you work on something else.
 
 And if you've never spent an evening on the quiet internet — maybe start now. It's still there. It's been waiting.
