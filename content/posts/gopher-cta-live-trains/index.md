@@ -57,6 +57,9 @@ Under the map: a per-line breakdown (Red, Blue, Brown…), and each line drills 
 
 ![Individual train detail](images/train-detail.png)
 
+![Querying a specific train run](images/train-run-detail.png)
+*Drilling down from root → line → train → run details. Each selector is just a path: `/red` → `/train/906.txt`. No cookies, no sessions, no state. Pure information architecture.*
+
 ## How it actually serves
 
 Worth a paragraph for the infra people. gopher-cta doesn't speak gopher itself — that job belongs to [geomyidae](https://r-36.net/scm/geomyidae/), a lovely sub-1000-line C daemon. My part is a small Rust fetcher that, every 30 seconds, renders the whole tree into a fresh snapshot directory and then atomically flips a `current` symlink to point at it. geomyidae serves `current/`. Because the swap is a single `rename(2)`, a reader always sees a complete tree, never a half-written one. Old snapshots get garbage-collected. No database, no in-place mutation, no half-states. It's the kind of boring-on-purpose design that lets you sleep.
