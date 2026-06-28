@@ -28,13 +28,15 @@ jobs:
             echo "::error::KUBE_CONFIG_B64 secret is not set — add it with: base64 < ~/.kube/config | gh secret set KUBE_CONFIG_B64 -R ${{ github.repository }}"
             exit 1
           fi
-          mkdir -p "$HOME/.kube"
-          echo "$KUBE_CONFIG_B64" | base64 -d > "$HOME/.kube/config"
-          chmod 600 "$HOME/.kube/config"
+          kc="$RUNNER_TEMP/kubeconfig"
+          echo "$KUBE_CONFIG_B64" | base64 -d > "$kc"
+          chmod 600 "$kc"
+          echo "kubeconfig: $(wc -c < "$kc") bytes"
+          echo "cluster server: $(KUBECONFIG="$kc" kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')"
+          # Hand the path to later steps via the job env (so paths can't drift).
+          echo "KUBECONFIG=$kc" >> "$GITHUB_ENV"
 
       - name: Deploy
-        env:
-          KUBECONFIG: /home/runner/.kube/config
         run: |
           kubectl -n blog rollout restart deployment/blog
           kubectl -n blog rollout status deployment/blog --timeout=120s
