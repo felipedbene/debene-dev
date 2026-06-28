@@ -1,6 +1,6 @@
 ---
 title: "A Gopher Constellation in a Day"
-date: 2026-06-27T19:30:00-05:00
+date: 2026-06-27T18:30:00-05:00
 draft: false
 author: "Felipe De Bene"
 description: "In one day I turned a single gopherhole into a neighborhood: pulled out a shared Rust core, built an interactive tarot reader that draws three cards against the real sky, and wired three holes into a hub. Then I published this post to both the web and gopher — to see which version gets read."
