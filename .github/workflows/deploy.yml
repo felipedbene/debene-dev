@@ -20,6 +20,18 @@ jobs:
             -t blog-debene-dev:latest \
             -t blog-debene-dev:${{ github.sha }} .
 
+      - name: Write kubeconfig from secret
+        env:
+          KUBE_CONFIG_B64: ${{ secrets.KUBE_CONFIG_B64 }}
+        run: |
+          if [ -z "$KUBE_CONFIG_B64" ]; then
+            echo "::error::KUBE_CONFIG_B64 secret is not set — add it with: base64 < ~/.kube/config | gh secret set KUBE_CONFIG_B64 -R ${{ github.repository }}"
+            exit 1
+          fi
+          mkdir -p "$HOME/.kube"
+          echo "$KUBE_CONFIG_B64" | base64 -d > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+
       - name: Deploy
         env:
           KUBECONFIG: /home/runner/.kube/config
