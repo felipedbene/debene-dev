@@ -4,15 +4,15 @@ date: 2026-07-10
 tags: [macos9, retrocomputing, ppc, c99, gopher, kubernetes, rust, open-transport, vnc]
 cover:
   image: "images/hero-full-desktop.jpg"
-  alt: "M4 MacBook VNC'd into Mac OS 9.2.2, Casquinha playing Taylor Swift, with code diffs and task lists visible"
+  alt: "M4 MacBook VNC'd into Mac OS 9.2.1, Casquinha playing Taylor Swift, with code diffs and task lists visible"
 draft: false
 ---
 
-![The whole stack: M4 MacBook VNC'd into Mac OS 9.2.2, Casquinha playing Taylor Swift's "The Life of a Showgirl", code diffs bleeding out the sides](images/hero-full-desktop.jpg)
+![The whole stack: M4 MacBook VNC'd into Mac OS 9.2.1, Casquinha playing Taylor Swift's "The Life of a Showgirl", code diffs bleeding out the sides](images/hero-full-desktop.jpg)
 
 There's a screenshot on my other monitor right now that I can't stop looking at.
 
-An **M4 MacBook** is running a VNC viewer. That viewer is connected to a **Mac OS 9 machine** sitting headless on my workbench. On that classic Mac desktop, a little app called **Casquinha** is playing *The Fate of Ophelia* off Taylor Swift's *The Life of a Showgirl*. Album art loaded. Scrubber moving. "Up Next" queue populated.
+An **M4 MacBook** is running a VNC viewer. That viewer is connected to a **Mac OS 9 machine** with a broken display and broken clamshell (new parts on the way) running bare on my workbench. On that classic Mac desktop, a little app called **Casquinha** is playing *The Fate of Ophelia* off Taylor Swift's *The Life of a Showgirl*. Album art loaded. Scrubber moving. "Up Next" queue populated.
 
 The record came out in a world of Spotify, HLS, and DRM. The machine playing it predates all three. Between them sits a stack I built by hand, and honestly? This one meant something.
 
@@ -29,7 +29,7 @@ M4 MacBook (2025)
 MiniVNC  ── VNC server, running ON the classic Mac
    │  (with statsd telemetry, because why not)
    ▼
-Mac OS 9.0.4 @ 10.0.1.82  ─ iBook G3 Clamshell
+Mac OS 9.2.1 @ 10.x.x.x  ─ iBook G3 Clamshell
    │  64MB RAM, dead LCD, running bare on the bench
    ▼
 Casquinha  ── my C99 Spotify remote for Mac OS 9
@@ -55,9 +55,9 @@ The hardware is an **iBook G3 Clamshell** I rescued from a basement. It was **co
 
 ![Dead LCD display with disconnected antenna cable](images/dead-display.jpg)
 
-Parts are en route: a new Samsung LT121SU-123 LCD panel (arrives July 24), 256MB RAM upgrade (July 14), and an mSATA SSD with IDE adapter (arriving today). But I couldn't wait. So I reassembled it on the workbench **without the case**, did a clean Mac OS 9.0.4 install, and kept coding.
+Parts are en route: a new Samsung LT121SU-123 LCD panel (arrives July 24), 256MB RAM upgrade (July 14), and an mSATA SSD with IDE adapter (arriving today). But I couldn't wait. So I reassembled it on the workbench **without the case**, did a clean Mac OS 9.2.1 install, and kept coding.
 
-![Mac OS 9.0.4 running bare on the bench, desktop covered in old files](images/bare-hardware-running.jpg)
+![Mac OS 9.2.1 running bare on the bench, desktop covered in old files](images/bare-hardware-running.jpg)
 
 **VNC isn't a choice here; it's survival.** The display is physically dead. MiniVNC is the only way I can see the desktop until that LCD arrives.
 
@@ -77,13 +77,17 @@ Three pieces of software are doing the work. Two are mine.
 
 Without MiniVNC there's no screen. The classic Mac sits headless; MiniVNC serves its framebuffer over RFB so I can drive it from the M4.
 
-### gopher-spot — the bridge
+### gopher-spot — the enabler
 
-**gopher-spot** is a Rust service on my Kubernetes cluster. Speaks Spotify Web API on one side, plain gopher on the other. Search, queue, now-playing, transport controls — all of it collapses to gopher selectors and menus.
+**[gopher-spot](https://github.com/felipedbene/gopher-spot)** is the piece that makes all of this possible. It's a Rust service running on my Kubernetes cluster that acts as the bridge between two incompatible worlds: Spotify's modern OAuth2/TLS/JSON API on one side, and a 1991 text protocol on the other.
 
-This is the pattern I keep coming back to: **modern service → K8s bridge → gopher → thin native client**. The bridge does the ugly credential-heavy TLS-heavy JSON-heavy work on beefy hardware. The vintage machine gets something it can parse without a heap tantrum.
+Without gopher-spot, there's no way a 64 MB Mac from 2001 could talk to Spotify. The backend does the heavy lifting — OAuth token refresh, HTTPS connections, parsing megabyte JSON responses, maintaining WebSocket streams for now-playing state, handling rate limits — and translates all of that complexity down to **plain gopher menus**: tab-delimited text lines that a cooperative OS can parse in microseconds without freezing.
 
----
+It's more than a Spotify bridge. It's the **reference implementation of a pattern**: modern service → K8s → gopher → thin native client. Any API — weather, transit, news feeds — can be reduced to gopher menus by a bridge running on hardware that can afford the complexity. Then *any* vintage machine gets to feel fast and native because it never has to do the hard part.
+
+The architecture is the real trick here. Casquinha is 2,000 lines of C. gopher-spot is 1,500 lines of Rust. But the separation of concerns means the thin client stays simple, testable, and responsive, while the bridge handles every ugly reality of talking to a 2020s API.
+
+**That's** why this works. The protocol choice isn't nostalgia—it's deliberate offloading of complexity to where the compute lives.
 
 ## Why gopher, not just HTTP?
 
