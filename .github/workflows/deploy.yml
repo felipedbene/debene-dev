@@ -38,6 +38,10 @@ jobs:
 
       - name: Deploy
         run: |
+          # Reconcile to the manifest first (declares replicas: 1). This clears
+          # any live drift — e.g. a stray 2nd replica that never goes Ready and
+          # otherwise hangs the rollout until it times out.
+          kubectl apply -f k8s/deployment.yaml
           kubectl -n blog rollout restart deployment/blog
           kubectl -n blog rollout status deployment/blog --timeout=120s
 
