@@ -1,32 +1,36 @@
 # debene.dev
 
-Personal blog running on [Hugo](https://gohugo.io/) with the [PaperMod](https://github.com/adityatelange/hugo-PaperMod) theme. Self-hosted on a Kubernetes homelab with automated webhook-based deployment.
+Personal blog running on [Hugo](https://gohugo.io/) with the [PaperMod](https://github.com/adityatelange/hugo-PaperMod) theme. Self-hosted on a Kubernetes homelab, built and deployed by a GitHub Actions workflow.
 
-**✨ Fully automated:** Push to `main` → Live in ~40 seconds!
+**✨ Fully automated:** Push to `main` → GitHub Actions builds a container image, rolls out the deployment, and purges the CDN cache.
 
 ## Stack
 
 ```
-Internet → Cloudflare Tunnel → K8s (nginx pods) → NFS Storage
+Internet → Cloudflare Tunnel → K8s (nginx pod serving the built image)
                                       ↑
-                                 Webhook Pod
+                          kubectl rollout restart
                                       ↑
-                              GitHub Push Event
+                         GitHub Actions (self-hosted runner)
+                                      ↑
+                              GitHub Push to main
 ```
 
-- **Generator**: Hugo 0.152.2+extended (ARM64)
+- **Generator**: Hugo `std-0.157.0` (via the `hugomods/hugo:std-0.157.0` build image)
 - **Theme**: PaperMod (git submodule)
-- **Web Server**: nginx:alpine serving static files (multi-arch: AMD64 + ARM64)
-- **Storage**: NFS (TrueNAS SCALE, 40Gb InfiniBand RDMA)
-- **Hosting**: Kubernetes homelab (kubeadm, 5-node cluster: x86_64 + ARM64)
-- **CDN/Tunnel**: Cloudflare Tunnel (Zero Trust, QUIC protocol)
+- **Web Server**: nginx:alpine serving the static site baked into the container image
+- **Container build**: `nerdctl build` on a self-hosted homelab runner (containerd, `k8s.io` namespace)
+- **Hosting**: Kubernetes homelab (`blog` namespace)
+- **CDN/Tunnel**: Cloudflare Tunnel (`cloudflared` deployment in-cluster)
 - **Domain**: [debene.dev](https://debene.dev)
 
 ## Architecture
 
 ### Deployment Pipeline
 
-**Automated webhook-based deployment** (no GitHub Actions, no Docker builds):
+The pipeline is a **GitHub Actions workflow** (`.github/workflows/deploy.yml`) that runs on a
+**self-hosted homelab runner**. On every push to `main` (or a manual `workflow_dispatch`) it builds a
+container image, restarts the Kubernetes deployment, and purges the Cloudflare cache.
 
 ```
 ┌─────────────┐
@@ -34,36 +38,29 @@ Internet → Cloudflare Tunnel → K8s (nginx pods) → NFS Storage
 └──────┬──────┘
        │
        ▼
-┌─────────────┐
-│ GitHub      │  Webhook fires POST request
-│ Webhook     │
-└──────┬──────┘
-       │
-       ▼
-┌─────────────────────────────────────┐
-│ K8s Webhook Pod (orion.debene.dev)  │
-│ ┌─────────────────────────────────┐ │
-│ │ 1. Git pull (fetch latest)      │ │
-│ │ 2. Hugo build (static site gen) │ │
-│ │ 3. Copy to NFS (/var/www/html)  │ │
-│ │ 4. Fix permissions (www-data)   │ │
-│ └─────────────────────────────────┘ │
-└──────────────┬──────────────────────┘
+┌──────────────────────────────────────────────┐
+│ GitHub Actions — job: build-and-deploy       │
+│ runs-on: [self-hosted, homelab]              │
+│                                              │
+│ 1. Checkout (submodules: true, full history) │
+│ 2. nerdctl build (Hugo + nginx image)        │
+│      tags: blog-debene-dev:latest            │
+│            blog-debene-dev:<git-sha>          │
+│      into the containerd k8s.io namespace    │
+│ 3. Write kubeconfig from KUBE_CONFIG_B64      │
+│ 4. kubectl -n blog rollout restart           │
+│      deployment/blog                          │
+│    kubectl -n blog rollout status (120s)      │
+│ 5. Purge Cloudflare cache (purge_everything)  │
+└──────────────┬───────────────────────────────┘
                │
                ▼
 ┌──────────────────────────────────────┐
-│ NFS Storage (TrueNAS)                │
-│ /mnt/tank/media/www/blog/            │
-│ - Mounted via InfiniBand (RDMA)     │
-│ - Shared across all nginx pods      │
-└──────────────┬───────────────────────┘
-               │
-               ▼
-┌──────────────────────────────────────┐
-│ Nginx Pods (intel9 + orion)          │
-│ - Multi-arch deployment              │
-│ - Serve static files from NFS       │
-│ - 2 replicas for HA                  │
+│ K8s namespace: blog                  │
+│ - Deployment/blog (nginx:alpine)     │
+│   serves the freshly built image     │
+│ - Service/blog (port 80)             │
+│ - Deployment/cloudflared (tunnel)    │
 └──────────────┬───────────────────────┘
                │
                ▼
@@ -71,7 +68,6 @@ Internet → Cloudflare Tunnel → K8s (nginx pods) → NFS Storage
 │ Cloudflare Tunnel (cloudflared pod) │
 │ - Secure tunnel to Cloudflare edge  │
 │ - No open firewall ports             │
-│ - QUIC protocol for performance      │
 └──────────────┬───────────────────────┘
                │
                ▼
@@ -81,43 +77,27 @@ Internet → Cloudflare Tunnel → K8s (nginx pods) → NFS Storage
        └───────────────┘
 ```
 
-### Why This Architecture?
+### How the image is built
 
-**No Docker builds, no image registry:**
-- Hugo builds static files directly in webhook pod
-- Files copied to NFS, served by nginx
-- Faster deploys (~40s vs 5+ min with Docker build)
-- Simpler infrastructure (no Docker Hub, no image pulls)
+`Dockerfile` is a two-stage build:
 
-**NFS over InfiniBand:**
-- 40Gb/s RDMA storage network
-- Single source of truth for static files
-- All nginx pods serve same content instantly
-- No need to update deployments or pull images
+1. **Builder** — `hugomods/hugo:std-0.157.0` copies the repo in and runs `hugo --minify`.
+2. **Runtime** — `nginx:alpine` copies the generated `public/` directory to
+   `/usr/share/nginx/html` and adds `nginx.conf`.
 
-**Webhook vs GitHub Actions:**
-- Runs inside cluster (no external runners)
-- Direct NFS access (no kubectl needed)
-- Faster feedback loop
-- Lower resource usage
+The whole site is baked into the image, so `Deployment/blog` serves static files straight from the
+container — there is no shared storage volume. Because the deployment uses
+`imagePullPolicy: IfNotPresent` with the `:latest` tag, the workflow ships new content with a
+`kubectl rollout restart` rather than by changing the image reference.
 
-## Deploy Performance
+### Required secrets
 
-**Typical deploy timeline:**
-```
-00:00 - Git push to main
-00:01 - Webhook triggered (< 1ms response)
-00:03 - Git pull complete
-00:05 - Hugo build (2-3s for ~200 pages)
-00:40 - Deploy complete (copy + permissions)
-00:40 - Site live on debene.dev
-```
+The workflow reads three repository secrets:
 
-**Real-world example (2026-05-10):**
-- Pages: 210 → 215 (+5 new)
-- Hugo build: 2.085s
-- Total deploy: 40 seconds
-- Webhook latency: 587μs
+- `KUBE_CONFIG_B64` — base64-encoded kubeconfig for the cluster.
+  Set it with: `base64 < ~/.kube/config | gh secret set KUBE_CONFIG_B64 -R <owner>/<repo>`
+- `CF_ZONE_ID` — Cloudflare zone ID for `debene.dev`.
+- `CF_API_TOKEN` — Cloudflare API token with cache-purge permission.
 
 ## Local Development
 
@@ -176,69 +156,26 @@ git add .
 git commit -m "New post: My Awesome Article"
 git push origin main
 
-# Webhook automatically triggers deploy
-# Watch logs: kubectl logs -n blog deployment/blog-webhook -f
+# GitHub Actions builds the image and rolls out the deployment.
+# Watch the run: gh run watch -R felipedbene/debene-dev
 ```
 
-**No manual steps required!** The webhook handles:
-1. ✅ Git pull
-2. ✅ Hugo build
-3. ✅ NFS deployment
-4. ✅ Permissions
+The workflow handles everything:
+1. ✅ Build the Hugo + nginx container image (`nerdctl build`)
+2. ✅ Write the kubeconfig from the `KUBE_CONFIG_B64` secret
+3. ✅ `kubectl rollout restart` + `rollout status` the `blog` deployment
+4. ✅ Purge the Cloudflare cache
 5. ✅ Live site update
-
-## Webhook Configuration
-
-**GitHub webhook settings:**
-- **Payload URL:** `https://debene.dev/hooks/blog-deploy`
-- **Content type:** `application/json`
-- **Events:** Just push events on `main` branch
-- **Secret:** Configured in K8s secret
-
-**Webhook pod spec:**
-```yaml
-namespace: blog
-deployment: blog-webhook
-replicas: 1
-node: orion.debene.dev (ARM64)
-init-container: clone-repo (one-time git clone)
-container: webhook-all-in-one (Alpine + Hugo + webhook binary)
-```
-
-## Infrastructure Details
-
-**Kubernetes cluster:**
-- **Control plane:** zima (10.0.10.100)
-- **Workers:** intel5, intel9, orion, ultra2
-- **CNI:** Calico (VXLAN)
-- **Storage:** Longhorn (replicated) + NFS (media)
-- **Load Balancer:** MetalLB
-- **Ingress:** Caddy (K8s operator)
-
-**Storage backend:**
-- **NAS:** TrueNAS SCALE 25.10.3.1
-- **Network:** InfiniBand 40Gb/s (FDR)
-- **Protocol:** NFS with RDMA (proto=rdma, port=20049)
-- **Mount:** `/mnt/tank/media/www/blog/` → `/var/www/html`
-
-**Blog pods:**
-```bash
-# 2 nginx replicas for HA
-kubectl get pods -n blog -l app=blog
-NAME                    READY   STATUS    NODE
-blog-c5b7f45f7-88lbb    1/1     Running   intel9.debene.dev
-blog-c5b7f45f7-sgxpm    1/1     Running   orion.debene.dev
-```
 
 ## Monitoring
 
-**Webhook logs:**
+**Deploy runs (GitHub Actions):**
 ```bash
-# Watch deploy in real-time
-kubectl logs -n blog deployment/blog-webhook -f
+# Watch the latest deploy
+gh run watch -R felipedbene/debene-dev
 
-# Check last deploy
-kubectl logs -n blog deployment/blog-webhook --tail=50
+# List recent runs
+gh run list -R felipedbene/debene-dev --workflow deploy.yml
 ```
 
 **Blog access logs:**
@@ -252,46 +189,39 @@ kubectl logs -n blog -l app=blog --tail=100 | grep -v healthz
 # Check all blog resources
 kubectl get all -n blog
 
-# Check NFS mount status
-kubectl exec -n blog deployment/blog -- df -h /var/www/html
+# Check rollout status
+kubectl -n blog rollout status deployment/blog
 ```
 
 ## Troubleshooting
 
-**Webhook not triggering:**
+**Deploy workflow failing:**
 ```bash
-# Check webhook pod logs
-kubectl logs -n blog deployment/blog-webhook
+# Inspect the last run's logs
+gh run view -R felipedbene/debene-dev --log-failed
 
-# Verify GitHub webhook deliveries (GitHub repo → Settings → Webhooks)
-
-# Test webhook manually
-curl -X POST https://debene.dev/hooks/blog-deploy \
-  -H "Content-Type: application/json" \
-  -d '{"ref":"refs/heads/main"}'
+# Common cause: KUBE_CONFIG_B64 secret missing/expired — the workflow
+# errors out early in the "Write kubeconfig from secret" step.
 ```
 
 **Hugo build failed:**
 ```bash
-# Check for syntax errors in posts
+# Reproduce locally — the CI build runs the same command
 hugo --minify
-
-# Rebuild webhook pod
-kubectl rollout restart -n blog deployment/blog-webhook
 ```
 
 **Site not updating:**
 ```bash
-# Check NFS mount
-kubectl exec -n blog deployment/blog -- ls -la /var/www/html
+# Check the deployment picked up the new image
+kubectl -n blog rollout restart deployment/blog
+kubectl -n blog rollout status deployment/blog
 
-# Check file timestamps
-kubectl exec -n blog deployment/blog -- stat /var/www/html/index.html
-
-# Force nginx pods to reload
-kubectl rollout restart -n blog deployment/blog
+# Confirm the Cloudflare cache was purged (re-run the workflow if needed)
 ```
 
 ## About
 
-Written from a basement in Chicago where an IBM POWER8 server runs Gentoo, AIX runs in KVM, and a Kubernetes cluster ties it all together with InfiniBand storage at 40Gb/s. The blog you're reading was deployed automatically by a webhook pod running on an ARM64 node, served from NFS over RDMA, and delivered via Cloudflare Tunnel — because why not? 🚀
+Written from a basement in Chicago where an IBM POWER8 server runs Gentoo, AIX runs in KVM, and a
+Kubernetes cluster ties it all together. The blog you're reading is built into an nginx container by
+a GitHub Actions workflow on a self-hosted homelab runner, rolled out with `kubectl`, and delivered
+via Cloudflare Tunnel — because why not? 🚀
