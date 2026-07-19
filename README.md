@@ -1,5 +1,9 @@
 # debene.dev
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) ![Hugo](https://img.shields.io/badge/Hugo-static%20site-ff4088.svg) [![Deploy Blog](https://github.com/felipedbene/debene-dev/actions/workflows/deploy.yml/badge.svg)](https://github.com/felipedbene/debene-dev/actions/workflows/deploy.yml)
+
+Read it live at [debene.dev](https://debene.dev).
+
 Personal blog running on [Hugo](https://gohugo.io/) with the [PaperMod](https://github.com/adityatelange/hugo-PaperMod) theme. Self-hosted on a Kubernetes homelab, built and deployed by a GitHub Actions workflow.
 
 **✨ Fully automated:** Push to `main` → GitHub Actions builds a container image, rolls out the deployment, and purges the CDN cache.
@@ -225,3 +229,8 @@ Written from a basement in Chicago where an IBM POWER8 server runs Gentoo, AIX r
 Kubernetes cluster ties it all together. The blog you're reading is built into an nginx container by
 a GitHub Actions workflow on a self-hosted homelab runner, rolled out with `kubectl`, and delivered
 via Cloudflare Tunnel — because why not? 🚀
+
+## License
+
+The site's code and configuration are released under the [MIT License](LICENSE).
+Blog post prose and images remain © Felipe De Bene.
