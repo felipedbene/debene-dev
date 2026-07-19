@@ -8,17 +8,24 @@ on:
 jobs:
   build-and-deploy:
     runs-on: [self-hosted, homelab]
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: true
           fetch-depth: 0
 
-      - name: Build container image (Hugo + nginx)
+      - name: Build and push image to ghcr
         run: |
-          sudo /usr/local/bin/nerdctl --namespace k8s.io build --no-cache \
-            -t blog-debene-dev:latest \
-            -t blog-debene-dev:${{ github.sha }} .
+          img=ghcr.io/${{ github.repository_owner }}/blog-debene-dev
+          echo "${{ secrets.GITHUB_TOKEN }}" | sudo /usr/local/bin/nerdctl login ghcr.io -u ${{ github.actor }} --password-stdin
+          sudo /usr/local/bin/nerdctl build --no-cache \
+            -t "$img:${{ github.sha }}" \
+            -t "$img:latest" .
+          sudo /usr/local/bin/nerdctl push "$img:${{ github.sha }}"
+          sudo /usr/local/bin/nerdctl push "$img:latest"
 
       - name: Write kubeconfig from secret
         env:
@@ -36,14 +43,25 @@ jobs:
           # Hand the path to later steps via the job env (so paths can't drift).
           echo "KUBECONFIG=$kc" >> "$GITHUB_ENV"
 
+      - name: Ensure ghcr pull secret
+        run: |
+          # Lets the cluster pull the (private) ghcr image. Refreshed each run.
+          kubectl -n blog create secret docker-registry ghcr-pull \
+            --docker-server=ghcr.io \
+            --docker-username=${{ github.actor }} \
+            --docker-password=${{ secrets.GITHUB_TOKEN }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+
       - name: Deploy
         run: |
-          # Reconcile to the manifest first (declares replicas: 1). This clears
-          # any live drift — e.g. a stray 2nd replica that never goes Ready and
-          # otherwise hangs the rollout until it times out.
+          # Reconcile spec (replicas: 1) to the manifest, then pin the deployment
+          # to THIS run's immutable, registry-backed image. Pulling from ghcr by
+          # SHA means any node runs exactly what we just built — no dependence on
+          # a node-local image cache (the old nerdctl-only path served stale builds).
+          img=ghcr.io/${{ github.repository_owner }}/blog-debene-dev
           kubectl apply -f k8s/deployment.yaml
-          kubectl -n blog rollout restart deployment/blog
-          kubectl -n blog rollout status deployment/blog --timeout=120s
+          kubectl -n blog set image deployment/blog blog="$img:${{ github.sha }}"
+          kubectl -n blog rollout status deployment/blog --timeout=180s
 
       - name: Purge Cloudflare cache
         run: |
