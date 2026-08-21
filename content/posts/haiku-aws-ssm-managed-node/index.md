@@ -57,7 +57,7 @@ A few wire details for anyone else who ends up here (nobody publishes this; you 
 
 ## haiku-mgmt-agent
 
-The Haiku arm64 port and the from-scratch ENA driver it all rides on live at **[felipedbene/Haiku-Graviton](https://github.com/felipedbene/Haiku-Graviton/tree/graviton)** (the `graviton` branch); the EC2 bring-up itself — how to reproduce the milestone and an honest account of what doesn't work yet — is at **[felipedbene/haiku-on-ec2](https://github.com/felipedbene/haiku-on-ec2)**.
+The agent itself — SigV4, the MDS client, the hand-rolled JSON, all of it — is at **[felipedbene/haiku-mgmt-agent](https://github.com/felipedbene/haiku-mgmt-agent)**. The Haiku arm64 port and the from-scratch ENA driver it rides on live at **[felipedbene/Haiku-Graviton](https://github.com/felipedbene/Haiku-Graviton/tree/graviton)** (the `graviton` branch); the EC2 bring-up itself — how to reproduce the milestone and an honest account of what doesn't work yet — is at **[felipedbene/haiku-on-ec2](https://github.com/felipedbene/haiku-on-ec2)**.
 
 The result is a single C++ binary, about 1.35 MB, statically carrying mbedTLS (which cross-compiled for Haiku on the first try — even `net_sockets.c` — and I'm still a little suspicious about that). HTTP/1.1, SigV4, and the JSON handling are hand-rolled, ~600 lines total, because pulling in a dependency tree to speak AWS JSON 1.1 to one endpoint felt like missing the point.
 
