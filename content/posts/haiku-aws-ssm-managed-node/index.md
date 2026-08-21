@@ -100,3 +100,15 @@ But the milestone stands: an operating system that spent 25 years as a desktop c
 `PlatformName: Haiku`. Status: Online.
 
 That's the whole joke, and I built it because nobody was going to stop me.
+
+---
+
+## Disclaimer
+
+A few things, honestly — because some of you should know before you `git clone` anything, and some of you are going to close the tab. I left it all in on purpose.
+
+**Built with AI.** This was built with heavy AI-assistant help — agentic pair-programming, idea to a working managed node in **under a day**. The SigV4 signer, the JSON codec, the MDS client, these words. The git history is intact and doesn't hide it. If that makes you want to stop reading: I get it, and I'm fine with it.
+
+**Not AWS.** Not affiliated with, endorsed by, or sponsored by Amazon. The wire protocol was read out of the **Apache-2.0** `amazon-ssm-agent` source — an independent client-side reimplementation, no binaries, no decompilation. `PlatformType: Linux` is there only because the service rejects anything else; `PlatformName: Haiku` is the honest field.
+
+**Experimental. No warranty.** Bring-up software for an unfinished OS port. It will misbehave. It reads IAM credentials from IMDS and runs Run Command payloads through `/bin/sh`. Don't point it at anything you love.
