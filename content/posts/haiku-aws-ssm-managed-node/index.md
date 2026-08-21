@@ -57,6 +57,8 @@ A few wire details for anyone else who ends up here (nobody publishes this; you 
 
 ## haiku-mgmt-agent
 
+The whole thing — the agent, the AMI notes, and the Haiku arm64 port it rides on — lives at **[felipedbene/Haiku-Graviton](https://github.com/felipedbene/Haiku-Graviton/tree/graviton)** (the `graviton` branch).
+
 The result is a single C++ binary, about 1.35 MB, statically carrying mbedTLS (which cross-compiled for Haiku on the first try — even `net_sockets.c` — and I'm still a little suspicious about that). HTTP/1.1, SigV4, and the JSON handling are hand-rolled, ~600 lines total, because pulling in a dependency tree to speak AWS JSON 1.1 to one endpoint felt like missing the point.
 
 It gets role credentials from IMDSv2, registers with `UpdateInstanceInformation`, long-polls MDS, runs `AWS-RunShellScript` documents through `/bin/sh`, and reports back. That first screenshot up top? That *is* the loop closing: a `send-command` in, `/bin/sh` runs the health check, `SendReply` carries the `sysinfo` back out. Anything it doesn't support — inventory associations, agent self-update — fails *loudly*, per-plugin, visible in the console. Never a silent skip. A management agent that quietly drops commands is worse than no agent.
@@ -87,7 +89,7 @@ A full BeOS-descendant desktop — Tracker, Deskbar, wallpaper — drawn by a se
 
 ## Known sharp edges
 
-In the spirit of documenting the mess: `ifconfig down/up` churn can strand DHCP (net_server issue — recovery is stop/start), the remote desktop is single-session (first client wins the stream) and a reconnect can need a nudge to force a full repaint, five copies of a virtual-screen error still print at early boot, and the clock fix currently lives in the agent instead of the OS where it belongs. All in the repo's notes. If you hit something not on the list, that's a bug report I want.
+In the spirit of documenting the mess: `ifconfig down/up` churn can strand DHCP (net_server issue — recovery is stop/start), the remote desktop is single-session (first client wins the stream) and a reconnect can need a nudge to force a full repaint, five copies of a virtual-screen error still print at early boot, and the clock fix currently lives in the agent instead of the OS where it belongs. All in [the repo's notes](https://github.com/felipedbene/Haiku-Graviton/tree/graviton). If you hit something not on the list, that's a bug report I want.
 
 ## What's next
 
