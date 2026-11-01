@@ -1,80 +1,144 @@
-name: Deploy Blog
+name: Build and deploy
+env:
+  # Define tool versions
+  DART_SASS_VERSION: 1.106.1
+  GO_VERSION: 1.26.10
+  HUGO_VERSION: 0.162.1
+  NODE_VERSION: 24.18
 
+  # Set the build time zone
+  TZ: Europe/Oslo
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
-
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+defaults:
+  run:
+    shell: bash
 jobs:
-  build-and-deploy:
-    runs-on: [self-hosted, homelab]
-    permissions:
-      contents: read
-      packages: write
+  build:
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v7
         with:
-          submodules: true
+          submodules: recursive
           fetch-depth: 0
+          lfs: false
 
-      - name: Build and push image to ghcr
-        run: |
-          img=ghcr.io/${{ github.repository_owner }}/blog-debene-dev
-          echo "${{ secrets.GITHUB_TOKEN }}" | sudo /usr/local/bin/nerdctl login ghcr.io -u ${{ github.actor }} --password-stdin
-          sudo /usr/local/bin/nerdctl build --no-cache \
-            -t "$img:${{ github.sha }}" \
-            -t "$img:latest" .
-          sudo /usr/local/bin/nerdctl push "$img:${{ github.sha }}"
-          sudo /usr/local/bin/nerdctl push "$img:latest"
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v6
 
-      - name: Write kubeconfig from secret
-        env:
-          KUBE_CONFIG_B64: ${{ secrets.KUBE_CONFIG_B64 }}
+      - name: Create a local tools directory
         run: |
-          if [ -z "$KUBE_CONFIG_B64" ]; then
-            echo "::error::KUBE_CONFIG_B64 secret is not set — add it with: base64 < ~/.kube/config | gh secret set KUBE_CONFIG_B64 -R ${{ github.repository }}"
-            exit 1
+          mkdir -p "${HOME}/.local"
+
+      - name: Install Go
+        if: hashFiles('go.mod') != ''
+        uses: actions/setup-go@v7
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: false
+
+      - name: Install Node.js
+        if: hashFiles('package-lock.json') != ''
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Dart Sass
+        run: |
+          echo "Installing Dart Sass ${DART_SASS_VERSION}..."
+          curl -sfL --output-dir "${{ runner.temp }}" -O "https://github.com/sass/dart-sass/releases/download/${DART_SASS_VERSION}/dart-sass-${DART_SASS_VERSION}-linux-x64.tar.gz"
+          tar -C "${HOME}/.local" -xf "${{ runner.temp }}/dart-sass-${DART_SASS_VERSION}-linux-x64.tar.gz"
+          echo "${HOME}/.local/dart-sass" >> "${GITHUB_PATH}"
+
+      - name: Install Hugo
+        run: |
+          echo "Installing Hugo ${HUGO_VERSION}..."
+          curl -sfL --output-dir "${{ runner.temp }}" -O "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_${HUGO_VERSION}_linux-amd64.tar.gz"
+          mkdir "${HOME}/.local/hugo"
+          tar -C "${HOME}/.local/hugo" -xf "${{ runner.temp }}/hugo_${HUGO_VERSION}_linux-amd64.tar.gz"
+          echo "${HOME}/.local/hugo" >> "${GITHUB_PATH}"
+
+      - name: Log tool versions
+        run: |
+          echo "Logging tool versions..."
+          command -v sass &> /dev/null && echo "Dart Sass: $(sass --version)" || echo "Dart Sass: not installed"
+          command -v go &> /dev/null && echo "Go: $(go version)" || echo "Go: not installed"
+          command -v hugo &> /dev/null && echo "Hugo: $(hugo version)" || echo "Hugo: not installed"
+          command -v node &> /dev/null && echo "Node.js: $(node --version)" || echo "Node.js: not installed"
+
+      - name: Configure Git
+        run: |
+          echo "Configuring Git..."
+          git config --global core.quotepath false
+
+      - name: Fetch full Git history
+        run: |
+          if [[ $(git rev-parse --is-shallow-repository) == true ]]; then
+            echo "Fetching full Git history..."
+            git fetch --unshallow
           fi
-          kc="$RUNNER_TEMP/kubeconfig"
-          echo "$KUBE_CONFIG_B64" | base64 -d > "$kc"
-          chmod 600 "$kc"
-          echo "kubeconfig: $(wc -c < "$kc") bytes"
-          echo "cluster server: $(KUBECONFIG="$kc" kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')"
-          # Hand the path to later steps via the job env (so paths can't drift).
-          echo "KUBECONFIG=$kc" >> "$GITHUB_ENV"
 
-      - name: Ensure ghcr pull secret
+      - name: Initialize Git submodules
         run: |
-          # Lets the cluster pull the (private) ghcr image. Refreshed each run.
-          kubectl -n blog create secret docker-registry ghcr-pull \
-            --docker-server=ghcr.io \
-            --docker-username=${{ github.actor }} \
-            --docker-password=${{ secrets.GITHUB_TOKEN }} \
-            --dry-run=client -o yaml | kubectl apply -f -
+          if [[ -f .gitmodules ]]; then
+            echo "Initializing Git submodules..."
+            git submodule update --init --recursive
+          fi
 
-      - name: Deploy
+      - name: Install Node.js dependencies
         run: |
-          # Reconcile spec (replicas: 1) to the manifest, then pin the deployment
-          # to THIS run's immutable, registry-backed image. Pulling from ghcr by
-          # SHA means any node runs exactly what we just built — no dependence on
-          # a node-local image cache (the old nerdctl-only path served stale builds).
-          img=ghcr.io/${{ github.repository_owner }}/blog-debene-dev
-          kubectl apply -f k8s/deployment.yaml
-          kubectl -n blog set image deployment/blog blog="$img:${{ github.sha }}"
-          kubectl -n blog rollout status deployment/blog --timeout=180s
+          if [[ -f package-lock.json ]]; then
+            echo "Installing Node.js dependencies..."
+            npm ci
+          fi
 
-      - name: Purge Cloudflare cache
-        run: |
-          curl -sf -X POST \
-            "https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/purge_cache" \
-            -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            --data '{"purge_everything":true}'
-          echo "✅ Cache purged"
+      - name: Cache restore
+        id: cache-restore
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ runner.temp }}/.cache/hugo
+          key: hugo-${{ github.run_id }}
+          restore-keys: hugo-
 
-      - name: Summary
-        if: always()
+      - name: Build
         run: |
-          echo "### Deploy ${{ job.status }} 🚀" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**URL:** https://debene.dev" >> $GITHUB_STEP_SUMMARY
+          echo "Building the project..."
+          hugo build \
+            --gc \
+            --minify \
+            --baseURL "${{ steps.pages.outputs.base_url }}/" \
+            --cacheDir "${{ runner.temp }}/.cache/hugo"
+
+      - name: Cache save
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ runner.temp }}/.cache/hugo
+          key: ${{ steps.cache-restore.outputs.cache-primary-key }}
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          include-hidden-files: false
+          path: ./public
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
