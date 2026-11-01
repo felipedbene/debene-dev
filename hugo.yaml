@@ -20,7 +20,7 @@ params:
   title: "debene.dev"
   description: "Infrastructure, alternative computing, and enterprise UNIX from a basement in Chicago."
   author: "Felipe De Bene"
-  keywords: ["homelab", "POWER8", "AIX", "IBM", "Kubernetes", "infrastructure", "alternative computing", "Gentoo", "PowerPC", "enterprise UNIX"]
+  keywords: ["homelab", "POWER8", "AIX", "IBM", "Kubernetes", "infrastructure", "alternative computing", "Gentoo", "PowerPC", "enterprise UNIX","AWS","Cloud Computing"]
   images: ["/images/og-default.png"]
   googleAdsense: "ca-pub-1479106809372421"
   defaultTheme: auto
